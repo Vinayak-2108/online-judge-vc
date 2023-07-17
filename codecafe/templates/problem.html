@@ -6,9 +6,26 @@
     <title>problem</title>
 </head>
 <body>
+    <div>
+        {% if user.is_authenticated %}
+            
+            {{ question.name}} <br>
+            {{ question.difficulty}} <br>
+            {{ question.description}} <br>
+
+        {% endif %}
+
+        {% if not user.is_authenticated %}
+            
+            <h1>User not logged in</h1>
+
+        {% endif %}
+
+
+    </div>
     
-    {{ question.name}} <br>
-    {{ question.description}} <br>
+
+
 
 </body>
 </html>

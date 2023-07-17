@@ -6,6 +6,17 @@
     <title>Code Cafe</title>
 </head>
 <body>
+    <div>
+        {% if user.is_authenticated %}
+            <a href="/accounts/logout">Logout</a>
+        {% endif %}
+
+        {% if not user.is_authenticated %}
+            <a href="/accounts/register">Register</a>
+            <a href="/accounts/login">Login</a>
+        {% endif %}
+        
+    </div>
     <h1>Welcome To Code Cafe!!</h1>
     {% for q in questions%}
         <a href="/problems/{{q.id}}">{{q.name}}</a><br>
