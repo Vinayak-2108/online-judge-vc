@@ -4,5 +4,5 @@ from . import views
 
 urlpatterns = [
     path("", views.index, name="home"),
-    path("problems/<str:key>/", views.problem, name="question"),
+    path('api/verdict/<int:problem_id>/', views.verdict, name='verdict_api'),
 ]
