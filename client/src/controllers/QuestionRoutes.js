@@ -21,5 +21,16 @@ export const get_question = async(obj,id) => {
     });
     const ans = await res.json();
     return ans;
-    
+}
+
+export const run_compiler = async(obj) => {
+    const res = await fetch(`${base}/questions/run`, {
+        method: 'POST',
+        body: JSON.stringify(obj),
+        headers: {
+            "Content-Type" : "application/json",
+        },
+    });
+    const ans = await res.json();
+    return ans;
 }

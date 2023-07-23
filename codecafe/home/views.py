@@ -1,36 +1,49 @@
 from django.shortcuts import render, redirect
 from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from .serializers import QuestionsSerializer
 from .models import QuestionList
-from django.http import JsonResponse
+from codecafe.compiler import compile_code, exec_code
+import os
 # Create your views here.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print("Base Directory:", BASE_DIR)
 
 
-# def verdict(request, problem_id):
-#     question = QuestionList.objects.get(pk=problem_id)
-#     path = f"C:\Users\Vinayak\OneDrive\Documents\Projects\Code-Cafe\codecafe\codecafe\Files/{question.name}.txt"
-    
-#     if request.method == 'POST':
-#         code = request.POST['code']
-#         language = request.POST['language']
-#         save_text_file(path, str(code))
-#         change_file_name(path, f'{question.name}.txt')
-#         change_file_extension(path, language)
+@api_view(['GET'])
+def apiOverview(request):
+    api_urls = {
+        'List':'ques-list'
+    }
+    return Response(api_urls)
+
+@api_view(['GET'])
+def questionsList(request):
+    questions = QuestionList.objects.all()
+    serializer = QuestionsSerializer(questions, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET','POST'])
+def run_code(request):
+    lang = request.data.get('lang')
+    code = request.data.get('code')
+    input_data = request.data.get('input_data')
+    problem_id = request.data.get('problem_id')
+    if code is None:
+        return Response({'message':'Empty code body'})
+    try:
+        problem = QuestionList.objects.get(id = problem_id)
         
-#         return JsonResponse({'code': code, 'question': question})
-#     else:
-#         return redirect('problem', problem_id=problem_id)
-
-
-class QuesView(viewsets.ModelViewSet):
-    serializer_class = QuestionsSerializer
-    queryset = QuestionList.objects.all()
-
-# def index(request):
-#     allquestions = QuestionList.objects.all()
-
-#     return render(request, 'index.html', {'questions': allquestions})
-
-# def problem(request, key):
-#     question = QuestionList.objects.get(id=key)
-#     return render(request, 'problem.html', {'question': question})
+        path = BASE_DIR + f'\dump\\temp.{lang}'
+        
+        with open(path,'w') as f:
+            f.write(code)
+        
+        compile_code(path,lang)
+        result = exec_code(lang,str(input_data).replace(' ','\n'))
+        # result=result.replace('\n',' ').replace(' ','')
+        result=result.replace('\n','')
+        return Response({'file_path': path, 'output': result})
+    except Exception as e:
+            return Response({'message': str(e)})

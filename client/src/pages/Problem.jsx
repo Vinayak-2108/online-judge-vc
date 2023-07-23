@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link, useParams } from "react-router-dom";
-import { get_all_questions } from "../controllers/QuestionRoutes";
+import { get_all_questions, run_compiler } from "../controllers/QuestionRoutes";
 import CodeMirror from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
@@ -9,7 +9,7 @@ import { python } from "@codemirror/lang-python";
 
 const Problem = () => {
     const [problem, setProblem] = useState([]);
-    const [codeLang, setCodeLang] = useState("");
+    const [codeLang, setCodeLang] = useState("cpp");
     var [code, setCode] = useState("");
     const [outputCode, setOutputCode] = useState("");
     const [userInput, setUserInput] = useState("");
@@ -17,19 +17,34 @@ const Problem = () => {
     const { id } = useParams();
     var valext = [cpp()];
     const probIndex = parseInt(id);
-    console.log(probIndex);
+
     useEffect(() => {
         // const obj = { id: id };
         // console.log(obj);
         get_all_questions().then((data) => {
-            console.log(data);
+            // console.log(data);
             setProblem(data);
         });
     }, [id]);
 
     const handleSubmit = () => {
-        
-    }
+        const payload = {
+            lang: codeLang,
+            code,
+            input_data: userInput,
+            problem_id: probIndex,
+        };
+        // console.log(payload);
+
+        try {
+            run_compiler(payload).then((data) => {
+                console.log(data);
+                setOutputCode(data.output);
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     return (
         <>
@@ -72,8 +87,7 @@ const Problem = () => {
                                         }}
                                     >
                                         <option value="cpp">C++</option>
-                                        <option value="python">Python</option>
-                                        {/* <option value="java">Java</option> */}
+                                        <option value="py">Python</option>
                                     </select>
                                 </div>
                                 <CodeMirror
@@ -109,14 +123,48 @@ const Problem = () => {
                                         onClick={() => {
                                             handleSubmit();
                                         }}
-                                        className="m-3 p-2 bg-[#e2e2e2] rounded-lg font-semibold hover:bg-[#e4e4e4] text-xl"
+                                        className="m-3 p-2 bg-[#e2e2e2] rounded-lg font-semibold hover:bg-[#E6B17E] hover:text-white text-xl"
                                     >
                                         Submit
                                     </button>
                                 </div>
                             </div>
+                            {outputCode && (
+                                <>
+                                    <h1 className="text-3xl m-3 uppercase font-semibold">
+                                        Output:
+                                    </h1>
+                                    <div className="m-3 p-2 bg-gray-600 rounded-lg">
+                                        <h3 className="text-xl font-monocode">
+                                            {outputCode}
+                                        </h3>
+                                    </div>
+                                    {/* {outputVerdict ? (
+                                        <>
+                                            <h1 className="text-3xl m-3 uppercase font-semibold">
+                                                Verdict:
+                                            </h1>
+                                            <div className="m-3 p-2 bg-gray-600 rounded-lg">
+                                                <h3 className="text-xl font-monocode">
+                                                    Accepted
+                                                </h3>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <h1 className="text-3xl m-3 uppercase font-semibold">
+                                                Verdict:
+                                            </h1>
+                                            <div className="m-3 p-2 bg-gray-600 rounded-lg">
+                                                <h3 className="text-xl font-monocode">
+                                                    Wrong Answer
+                                                </h3>
+                                            </div>
+                                        </>
+                                    )} */}
+                                </>
+                            )}
                         </div>
-                        ;
                     </>
                 ))}
         </>
