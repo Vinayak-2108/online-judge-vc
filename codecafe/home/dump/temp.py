@@ -1,1 +1,4 @@
-print("Hello Boiss")
+a = int(input())
+b = int(input())
+
+print(a+b)

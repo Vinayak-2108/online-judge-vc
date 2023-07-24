@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link, useParams } from "react-router-dom";
-import { get_all_questions, run_compiler } from "../controllers/QuestionRoutes";
+import {
+    get_all_questions,
+    run_compiler,
+    submit_compiler,
+} from "../controllers/QuestionRoutes";
 import CodeMirror from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
@@ -13,6 +17,8 @@ const Problem = () => {
     var [code, setCode] = useState("");
     const [outputCode, setOutputCode] = useState("");
     const [userInput, setUserInput] = useState("");
+    const [stateVerdict, setStateVerdict] = useState(false);
+    const [outputVerdict, setOutputVerdict] = useState(false);
 
     const { id } = useParams();
     var valext = [cpp()];
@@ -25,9 +31,11 @@ const Problem = () => {
             // console.log(data);
             setProblem(data);
         });
+        setStateVerdict(false);
+        setOutputCode(false);
     }, [id]);
 
-    const handleSubmit = () => {
+    const handleRun = () => {
         const payload = {
             lang: codeLang,
             code,
@@ -40,6 +48,27 @@ const Problem = () => {
             run_compiler(payload).then((data) => {
                 console.log(data);
                 setOutputCode(data.output);
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    const handleSubmit = () => {
+        const payload = {
+            lang: codeLang,
+            code,
+            input_data: userInput,
+            problem_id: probIndex,
+        };
+        // console.log(payload);
+
+        try {
+            submit_compiler(payload).then((data) => {
+                // console.log(data);
+
+                console.log(data.verdict);
+                setStateVerdict(true);
+                setOutputVerdict(data.verdict);
             });
         } catch (error) {
             console.log(error);
@@ -121,9 +150,18 @@ const Problem = () => {
                                 <div>
                                     <button
                                         onClick={() => {
-                                            handleSubmit();
+                                            handleRun();
                                         }}
                                         className="m-3 p-2 bg-[#e2e2e2] rounded-lg font-semibold hover:bg-[#E6B17E] hover:text-white text-xl"
+                                    >
+                                        Run
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            handleSubmit();
+                                        }}
+                                        disabled={code === ""}
+                                        className={`m-3 p-2 bg-[#e2e2e2] rounded-lg font-semibold  ${code === ""?("bg-gray-200 text-gray-500"):("hover:bg-[#E6B17E] bg-[#e2e2e2] hover:text-white")}  text-xl`}
                                     >
                                         Submit
                                     </button>
@@ -139,30 +177,35 @@ const Problem = () => {
                                             {outputCode}
                                         </h3>
                                     </div>
-                                    {/* {outputVerdict ? (
-                                        <>
-                                            <h1 className="text-3xl m-3 uppercase font-semibold">
-                                                Verdict:
-                                            </h1>
-                                            <div className="m-3 p-2 bg-gray-600 rounded-lg">
-                                                <h3 className="text-xl font-monocode">
-                                                    Accepted
-                                                </h3>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <h1 className="text-3xl m-3 uppercase font-semibold">
-                                                Verdict:
-                                            </h1>
-                                            <div className="m-3 p-2 bg-gray-600 rounded-lg">
-                                                <h3 className="text-xl font-monocode">
-                                                    Wrong Answer
-                                                </h3>
-                                            </div>
-                                        </>
-                                    )} */}
                                 </>
+                            )}
+
+                            {stateVerdict ? (
+                                outputVerdict === "Accepted" ? (
+                                    <>
+                                        <h1 className="text-3xl m-3 uppercase font-semibold">
+                                            Verdict:
+                                        </h1>
+                                        <div className="">
+                                            <h3 className="text-xl text-green-500 font-monocode">
+                                                Accepted
+                                            </h3>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex justify-center items-center w-full border-2 b">
+                                        <h1 className="text-3xl m-3 uppercase font-semibold">
+                                            Verdict:
+                                        </h1>
+                                        <div className="">
+                                            <h3 className="text-xl text-red-500 font-monocode">
+                                                {outputVerdict}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                )
+                            ) : (
+                                ""
                             )}
                         </div>
                     </>

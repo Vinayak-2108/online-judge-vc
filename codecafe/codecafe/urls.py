@@ -16,16 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework import routers
-from home import views
-
-# router = routers.DefaultRouter()
-# router.register('questions', views.QuesView, 'question')
 
 urlpatterns = [
-    # path("", include("home.urls")),
-    # path("accounts/", include("accounts.urls")),
     path('admin/', admin.site.urls),    
     path('api/', include("home.urls")),    
-    
 ]
