@@ -1,50 +1,54 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User, auth
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
-# Create your views here.
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+from accounts.serializers import UserSerializer
 
+# @api_view(['GET','POST'])
+# def create_user(request):
+#     serializer = UserSerializer(data=request.data)
+#     if serializer.is_valid():
+#         user = serializer.save()
+#         if user:
+#             token = Token.objects.create(user=user)
+#             json = serializer.data
+#             json['token'] = token.key
+#             return Response(json, status=status.HTTP_201_CREATED)
+        
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def signup(request):
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        user = User.objects.get(username=request.data['username'])
+        user.set_password(request.data['password'])
+        user.save()
+        token = Token.objects.create(user=user)
+        return Response({'token': token.key, 'message': "User Created", 'user': serializer.data})
+    return Response(serializer.errors, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
 def login(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+    user = get_object_or_404(User, username=request.data['username'])
+    if not user.check_password(request.data['password']):
+        return Response("missing user", status=status.HTTP_404_NOT_FOUND)
+    token, created = Token.objects.get_or_create(user=user)
+    serializer = UserSerializer(user)
+    return Response({'token': token.key, 'tag': True, 'user': serializer.data})
 
-        user = auth.authenticate(username=username, password=password)
-        if user is not None:
-            auth.login(request, user)
-            return redirect("/")
-        else:
-            return redirect("/login")
-    else:
-        return render(request, 'login.html')
-
-def register(request):
-    if(request.method =='POST'):
-        username = request.POST['username']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        password1 = request.POST['password1']
-        password2 = request.POST['password2']
-        email = request.POST['email']
-
-        if(password1 == password2):
-            if(User.objects.filter(username=username).exists()):
-                print("Username already exists")
-            elif(User.objects.filter(email=email).exists()):
-                print("Email already exists")
-                redirect('/accounts/register')
-            else:
-                user = User.objects.create_user(username=username, email=email, password=password1, first_name=first_name, last_name=last_name)
-                user.save()
-                print("User created")
-                redirect('/accounts/login')
+@api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def test_token(request):
+    print("HI")
+    username = request.user.username
+    return Response({'message':"Passed", 'tag': True,'username': username})
 
 
-        else:
-            print("Password not matching")
-        return redirect('/accounts/register')
-    else:
-        return render(request, 'register.html')
-    
-def logout(request):
-    auth.logout(request)
-    return redirect('/')

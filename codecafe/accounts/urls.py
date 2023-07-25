@@ -1,9 +1,9 @@
-from django.urls import path
+from django.urls import re_path
 
 from . import views
 
 urlpatterns = [
-    path("register", views.register, name="register"),
-    path("login", views.login, name="login"),
-    path("logout", views.logout, name="logout")
+    re_path('signup', views.signup),
+    re_path('login', views.login),
+    re_path('test_token', views.test_token),
 ]

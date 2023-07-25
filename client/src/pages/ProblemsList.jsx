@@ -7,10 +7,10 @@ const ProblemList = () => {
 
     useEffect(() => {
         get_all_questions().then((data)=>{
-            console.log(data);
             setProblem(data);
         })
     },[])
+    
     return (
         <>
             <Navbar />

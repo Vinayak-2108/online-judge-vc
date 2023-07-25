@@ -6,6 +6,7 @@ import {
     run_compiler,
     submit_compiler,
 } from "../controllers/QuestionRoutes";
+import {auth_user} from "../controllers/UserRoutes";
 import CodeMirror from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
@@ -19,21 +20,44 @@ const Problem = () => {
     const [userInput, setUserInput] = useState("");
     const [stateVerdict, setStateVerdict] = useState(false);
     const [outputVerdict, setOutputVerdict] = useState(false);
+    
+    const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+    const [userName, setUserName] = useState("");
 
     const { id } = useParams();
     var valext = [cpp()];
     const probIndex = parseInt(id);
 
     useEffect(() => {
-        // const obj = { id: id };
-        // console.log(obj);
+        if(localStorage.getItem("token")){
+            console.log("token exists");
+            let obj = {
+                token: localStorage.getItem("token"),
+            };
+            auth_user(obj).then((data) => {
+                if(data.tag){
+                    console.log("HI");
+                    setIsUserLoggedIn(true);
+                    let user_obj = {
+                        username: data.username
+                    }
+                    setUserName(user_obj.username);
+                    console.log(user_obj.username);
+                }
+                else{
+                    setIsUserLoggedIn(false);
+                }
+            });
+        }
+
+
         get_all_questions().then((data) => {
             // console.log(data);
             setProblem(data);
         });
         setStateVerdict(false);
         setOutputCode(false);
-    }, [id]);
+    }, []);
 
     const handleRun = () => {
         const payload = {
@@ -57,8 +81,8 @@ const Problem = () => {
         const payload = {
             lang: codeLang,
             code,
-            input_data: userInput,
             problem_id: probIndex,
+            username: userName,
         };
         // console.log(payload);
 
@@ -152,7 +176,8 @@ const Problem = () => {
                                         onClick={() => {
                                             handleRun();
                                         }}
-                                        className="m-3 p-2 bg-[#e2e2e2] rounded-lg font-semibold hover:bg-[#E6B17E] hover:text-white text-xl"
+                                        disabled={code === ""}
+                                        className={`m-3 p-2 bg-[#e2e2e2] rounded-lg font-semibold  ${code === ""?("bg-gray-200 text-gray-500"):("hover:bg-[#E6B17E] bg-[#e2e2e2] hover:text-white")}  text-xl`}
                                     >
                                         Run
                                     </button>

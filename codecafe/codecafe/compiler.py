@@ -6,16 +6,25 @@ def compile_code(file_path,lang):
         compiler = 'gcc'
     elif lang == 'cpp':
         compiler = 'g++'
+    elif lang == 'py':
+        return 1
     else:
-        return
+        return 0
     
+    curr_dir = os.getcwd()
     try:
-        curr_dir = os.getcwd()
-        os.chdir("home/dump")
-        subprocess.run([compiler, file_path], capture_output=True)
+        os.chdir("OJ/waste")
+        compile_file = subprocess.run([compiler, file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         os.chdir(curr_dir)
+        stderror = compile_file.stderr.decode("utf-8")
+        if stderror == "":
+            return 1
+        else:
+            return 0
     except:
-        print("Error occured while compiling")
+        os.chdir(curr_dir)
+        return 0
+
         
 
 def exec_code(lang,ip_data):

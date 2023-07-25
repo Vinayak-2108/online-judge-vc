@@ -1,37 +1,71 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Logo from "../assets/logo-white.png";
 import { Link } from "react-router-dom";
+import { auth_user } from "../controllers/UserRoutes";
 
-const Navbar = () => {
+const Navbar = ({name}) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+    const [userName, setUserName] = useState("");
+    const [logout, setLogout] = useState(false);
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
 
+    useEffect(() => {
+        if(localStorage.getItem("token")){
+            let obj = {
+                token: localStorage.getItem("token"),
+            };
+            auth_user(obj).then((data) => {
+                if(data.tag){
+                    let user_obj = {
+                        username: data.username
+                    }
+                    setUserName(user_obj.username);
+                }
+            });
+        }
+    }, [logout]);
     return (
-        <nav className="flex w-full items-center justify-between bg-[#C56E33] py-4 px-4">
+        <nav className="flex w-full items-center justify-between bg-[#fa840c] py-4 px-4">
             <div className="flex items-center">
-                <Link to="/"><img src={Logo} alt="" className="w-32 h-8" /></Link>
+                <Link to="/">
+                    <img src={Logo} alt="" className="w-32 h-8" />
+                </Link>
             </div>
 
             <ul className="hidden md:flex md:items-center">
-                <li className="ml-4">
-                    <Link
-                        to="/problems"
-                        className="text-white hover:text-[#ffd6af]"
-                    >
-                        Register
-                    </Link>
-                </li>
-                <li className="ml-4">
-                    <Link
-                        to="/problems"
-                        className="text-white hover:text-[#ffd6af]"
-                    >
-                        Login
-                    </Link>
-                </li>
+                {localStorage.getItem("token") ? (
+                    <>
+                        <li className="ml-4 text-white">
+                            {userName}
+                        </li>
+                        <li className="ml-4">
+                            <Link
+                                to="/signup"
+                                className="text-white hover:text-[#ffd6af]"
+                                onClick={() => {
+                                    setLogout(true);
+                                    localStorage.removeItem("token");
+                                    window.location.reload();
+                                }}
+                            >
+                                Logout
+                            </Link>
+                        </li>
+                    </>
+                ) : (
+                    <>
+                        <li className="ml-4">
+                            <Link
+                                to="/signup"
+                                className="text-white hover:text-[#ffd6af]"
+                            >
+                                Login/Register
+                            </Link>
+                        </li>
+                    </>
+                )}
             </ul>
             <div className="md:hidden flex flex-col p-2">
                 <div className="">
