@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
 import { get_all_questions } from "../controllers/QuestionRoutes";
@@ -6,11 +6,11 @@ const ProblemList = () => {
     const [problem, setProblem] = useState([]);
 
     useEffect(() => {
-        get_all_questions().then((data)=>{
+        get_all_questions().then((data) => {
             setProblem(data);
-        })
-    },[])
-    
+        });
+    }, []);
+
     return (
         <>
             <Navbar />
@@ -20,7 +20,7 @@ const ProblemList = () => {
                         <div class="py-2 align-middle inline-block">
                             <div class="shadow overflow-hidden sm:rounded-lg">
                                 <table class="min-w-full text-xl text-gold">
-                                    <thead class="bg-[#e2e2e2] text-xl uppercase font-medium">
+                                    <thead class="bg-[#e2e2e2] text-xl uppercase font-medium border-b-2 border-gray-500">
                                         <tr>
                                             <th></th>
                                             <th
@@ -43,7 +43,7 @@ const ProblemList = () => {
                                                 key={index}
                                                 class="bg-[#e2e2e2]"
                                             >
-                                                <tr class="bg-black bg-opacity-20">
+                                                <tr class="bg-gray bg-opacity-20">
                                                     <td class="pl-4">
                                                         {index + 1}
                                                     </td>
@@ -55,9 +55,24 @@ const ProblemList = () => {
                                                             {prob.name}
                                                         </Link>
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap">
-                                                        {prob.difficulty}
-                                                    </td>
+                                                    {prob.difficulty ===
+                                                        "Easy" && (
+                                                        <td class="px-6 py-4 text-green-600 whitespace-nowrap">
+                                                            {prob.difficulty}
+                                                        </td>
+                                                    )}
+                                                    {prob.difficulty ===
+                                                        "Medium" && (
+                                                        <td class="px-6 py-4 text-yellow-600 whitespace-nowrap">
+                                                            {prob.difficulty}
+                                                        </td>
+                                                    )}
+                                                    {prob.difficulty ===
+                                                        "Hard" && (
+                                                        <td class="px-6 py-4 text-red-600 whitespace-nowrap">
+                                                            {prob.difficulty}
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             </tbody>
                                         </>

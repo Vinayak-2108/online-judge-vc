@@ -13,7 +13,7 @@ def compile_code(file_path,lang):
     
     curr_dir = os.getcwd()
     try:
-        os.chdir("OJ/waste")
+        os.chdir("home\dump")
         compile_file = subprocess.run([compiler, file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         os.chdir(curr_dir)
         stderror = compile_file.stderr.decode("utf-8")

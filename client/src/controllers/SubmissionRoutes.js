@@ -1,4 +1,4 @@
-base = "https://localhost:8000/api"
+const base = "http://localhost:8000/api";
 
 export const get_all_submissions = async(obj) => {
     const res = await fetch(`${base}/submissions/`, {

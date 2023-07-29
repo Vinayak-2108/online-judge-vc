@@ -35,7 +35,7 @@ def run_code(request):
     lang = request.data.get('lang')
     code = request.data.get('code')
     input_data = request.data.get('input_data')
-    if code is "":
+    if code == "":
         return Response({'output':'Empty code body'})
     try:
         
@@ -55,10 +55,11 @@ def run_code(request):
 def submit_code(request):
     lang = request.data.get('lang')
     code = request.data.get('code')
+    username = request.data.get('username')
     problem_id = request.data.get('problem_id')
     question = QuestionList.objects.get(id=problem_id)
     tc = TestCases.objects.filter(id=problem_id)
-    if code is "":
+    if code == "":
         return Response({'verdict':'Empty code body'})
     try:
         
@@ -66,27 +67,28 @@ def submit_code(request):
         
         with open(path,'w') as f:
             f.write(code)
-        print("1")
+      
         result = compile_code(path,lang)
         
         if result == 0:
             submission = Submissions(
-            user = request.user.username,
+            user = username,
             problem = question.name,
             language=lang,
-            code=code,
+            # code=code,
             verdict="Compilation Error",
             )
             submission.save()
             return Response({'verdict': result})
+
         else:
             result = check_tc(tc,lang)
             result=result.replace('\n','')            
             submission = Submissions(
-                user = request.user.username,
+                user = username,
                 problem = question.name,
                 language=lang,
-                code=code,
+                # code=code,
                 verdict=result,
             )
             submission.save()

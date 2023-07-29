@@ -22,6 +22,8 @@ const Navbar = ({name}) => {
                         username: data.username
                     }
                     setUserName(user_obj.username);
+                    console.log(user_obj.username);
+
                 }
             });
         }
@@ -39,6 +41,24 @@ const Navbar = ({name}) => {
                     <>
                         <li className="ml-4 text-white">
                             {userName}
+                        </li>
+                        <li className="ml-4">
+                            <Link
+                                to="/problems"
+                                className="text-white hover:text-[#ffd6af]"
+                                
+                            >
+                                Problems
+                            </Link>
+                        </li>
+                        <li className="ml-4">
+                            <Link
+                                to="/submissions"
+                                className="text-white hover:text-[#ffd6af]"
+                                
+                            >
+                                Submissions
+                            </Link>
                         </li>
                         <li className="ml-4">
                             <Link

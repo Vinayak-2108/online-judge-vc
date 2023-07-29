@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import Backdrop from "../Backdrop/Backdrop";
+import Backdrop from "./Backdrop";
 
 const dropIn = {
     hidden: {
@@ -36,16 +36,15 @@ const ResultModal = ({ open, onClose, result }) => {
                 exit="exit"
             >
                 <div className="flex flex-col items-center min-h-[50px]">
-                    {result == "true" && (
-                        <p className="text-2xl font-xl font-bold mt-2">
-                            <span className="green_gradient">Correct answer ✔</span> 
-                        </p>
-                    )}
-                    {result == "false" && (
-                        <p className="text-2xl font-bold mt-2">
-                            <span className="orange_gradient">Wrong answer</span> ❌
-                        </p>
-                    )}
+                    <div
+                        className={`px-6 py-4 whitespace-nowrap ${
+                            result === "Accepted"
+                                ? "text-green-500"
+                                : "text-red-500"
+                        }`}
+                    >
+                        Verdict: {result}
+                    </div>
                 </div>
                 <motion.button
                     className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
@@ -53,7 +52,7 @@ const ResultModal = ({ open, onClose, result }) => {
                     whileTap={{ scale: 0.9 }}
                     onClick={onClose}
                 >
-                    Reset
+                    Close
                 </motion.button>
             </motion.div>
         </Backdrop>
