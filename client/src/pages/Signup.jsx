@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import { register_user, login_user } from "../controllers/UserRoutes";
 import "../styles/signup.css";
@@ -22,31 +23,29 @@ const Signup = () => {
     const handleSignInClick = () => {
         setIsSignUpMode(false);
     };
-    const handleLogInSubmit = async(e) => {
+    const handleLogInSubmit = async (e) => {
         e.preventDefault();
         let obj = {
             username: name,
             password: password,
-        }
+        };
         login_user(obj).then((data) => {
-            if(data.tag){
+            if (data.tag) {
                 localStorage.setItem("token", data.token);
-                navigate('/');
-            }
-            else{
+                navigate("/");
+            } else {
                 alert("Invalid Login");
             }
             window.location.reload();
         });
-
     };
-    const handleSignUpSubmit = async(e) => {
+    const handleSignUpSubmit = async (e) => {
         e.preventDefault();
         let obj = {
             username: name,
             email: email,
             password: password,
-        }
+        };
         // console.log(obj);
         register_user(obj).then((data) => {
             alert(data.message);
@@ -89,12 +88,14 @@ const Signup = () => {
                                     }
                                 />
                             </div>
-                            <button
+                            <motion.button
                                 className="btn solid"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
                                 onClick={handleLogInSubmit}
                             >
                                 LOGIN
-                            </button>
+                            </motion.button>
                         </form>
                         <form action="#" className="sign-up-form">
                             <h2 className="title">Sign up</h2>
@@ -133,10 +134,14 @@ const Signup = () => {
                                     }
                                 />
                             </div>
-                            <button
+                            <motion.button
                                 className="btn"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
                                 onClick={handleSignUpSubmit}
-                            >SIGN UP</button>
+                            >
+                                SIGN UP
+                            </motion.button>
                         </form>
                     </div>
                 </div>
@@ -149,17 +154,15 @@ const Signup = () => {
                                 Lorem ipsum, dolor sit amet consectetur
                                 adipisicing elit. Debitis, ex ratione. Aliquid!
                             </p>
-                            <button
+                            <motion.button
                                 className="btn transparent"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
                                 onClick={handleSignUpClick}
                             >
                                 Sign up
-                            </button>
-                        <img
-                            src={coffeeCup}
-                            className="image"
-                            alt=""
-                        />
+                            </motion.button>
+                            <img src={coffeeCup} className="image" alt="" />
                         </div>
                     </div>
                     <div className="panel right-panel">
@@ -170,12 +173,14 @@ const Signup = () => {
                                 adipisicing elit. Nostrum laboriosam ad
                                 deleniti.
                             </p>
-                            <button
+                            <motion.button
                                 className="btn transparent"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
                                 onClick={handleSignInClick}
                             >
                                 Sign in
-                            </button>
+                            </motion.button>
                         </div>
                         <img
                             src="https://i.ibb.co/nP8H853/Mobile-login-rafiki.png"
