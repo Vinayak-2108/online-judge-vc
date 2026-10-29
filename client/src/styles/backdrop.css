@@ -1,3 +1,4 @@
+@layer theme, base, components, utilities;
 @layer components {
 .backdrop{
     position: absolute;

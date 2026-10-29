@@ -1,9 +1,29 @@
+@layer theme, base, components, utilities;
 @import "tailwindcss";
 
-/* Tailwind 4 keeps buttons at the default cursor; v3 showed a pointer. */
+/* Tailwind v3 palette values for every colour utility the app uses (v4 moved to oklch). */
+@theme {
+    --color-gray-200: #e5e7eb;
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-gray-800: #1f2937;
+    --color-green-500: #22c55e;
+    --color-green-600: #16a34a;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+    --color-yellow-600: #ca8a04;
+}
+
 @layer base {
+    /* Tailwind 4 keeps buttons at the default cursor; v3 showed a pointer. */
     button:not(:disabled),
     [role="button"]:not(:disabled) {
         cursor: pointer;
+    }
+
+    /* v3 placeholder colour was gray-400; v4 uses currentColor at 50%. */
+    input::placeholder,
+    textarea::placeholder {
+        color: #9ca3af;
     }
 }

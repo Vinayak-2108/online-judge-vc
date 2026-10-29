@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { get_all_submissions } from "../controllers/SubmissionRoutes";
 import type { Submission } from "../types";
@@ -61,9 +61,8 @@ const Submissions = () => {
                                         </tr>
                                     </thead>
                                     {submissions.reverse().map((sub, index) => (
-                                        <>
+                                        <Fragment key={index}>
                                             <tbody
-                                                key={index}
                                                 className="bg-[#e2e2e2]"
                                             >
                                                 <tr className="bg-gray bg-opacity-20">
@@ -88,7 +87,7 @@ const Submissions = () => {
                                                     </td>
                                                 </tr>
                                             </tbody>
-                                        </>
+                                        </Fragment>
                                     ))}
                                 </table>
                             </div>

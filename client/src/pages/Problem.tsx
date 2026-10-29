@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link, useParams } from "react-router";
 import {
@@ -103,7 +103,7 @@ const Problem = () => {
                     {problem
                         .filter((prob) => prob.id === probIndex)
                         .map((temp) => (
-                            <>
+                            <Fragment key={temp.id}>
                                 <div className="grid grid-rows-2  md:grid-cols-2">
                                     <div className="bg-[#e2e2e2] rounded-sm m-3 p-2">
                                         <h1 className="text-3xl m-3 uppercase font-semibold text-[#C56E33]">
@@ -200,12 +200,12 @@ const Problem = () => {
                                     </div>
                                     {outputCode && (
                                         <>
-                                            <h1 className="text-3xl m-3 uppercase font-semibold">
+                                            <div className="text-3xl m-3 uppercase font-semibold">
                                                 Output:
                                                 <h3 className="text-xl font-monocode">
                                                     {outputCode}
                                                 </h3>
-                                            </h1>
+                                            </div>
                                         </>
                                     )}
                                     <ResultModal
@@ -216,7 +216,7 @@ const Problem = () => {
                                         result={outputVerdict}
                                     />
                                 </div>
-                            </>
+                            </Fragment>
                         ))}
                 </>
             ) : (

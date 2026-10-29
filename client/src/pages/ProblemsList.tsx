@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router";
 import { get_all_questions } from "../controllers/QuestionRoutes";
@@ -39,9 +39,8 @@ const ProblemList = () => {
                                         </tr>
                                     </thead>
                                     {problem?.map((prob, index) => (
-                                        <>
+                                        <Fragment key={index}>
                                             <tbody
-                                                key={index}
                                                 className="bg-[#e2e2e2]"
                                             >
                                                 <tr className="bg-gray">
@@ -76,7 +75,7 @@ const ProblemList = () => {
                                                     )}
                                                 </tr>
                                             </tbody>
-                                        </>
+                                        </Fragment>
                                     ))}
                                 </table>
                             </div>
