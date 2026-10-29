@@ -43,4 +43,7 @@ def logout(request):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def test_token(request):
-    return Response({'message': "Passed", 'tag': True, 'username': request.user.username})
+    return Response({
+        'message': "Passed", 'tag': True,
+        'username': request.user.username, 'email': request.user.email,
+    })

@@ -35,6 +35,7 @@ class QuestionTests(APITestCase):
         self.assertEqual(res.data['difficulty'], 'medium')
         self.assertEqual(res.data['examples'][0], {'input': 'hello', 'output': 'olleh', 'explanation': ''})
         self.assertIn('constraints', res.data)
+        self.assertEqual(res.data['test_count'], 2)
         self.assertIn('input_format', res.data)
         self.assertIn('output_format', res.data)
 
@@ -181,11 +182,26 @@ class JudgeFunctionTests(APITestCase):
         self.assertEqual(execute.call_count, 2)
 
     @mock.patch('codecafe.compiler.execute')
-    def test_compile_error_has_zero_passed_and_missing_time_is_zero(self, execute):
+    def test_compile_error_has_zero_passed_and_unknown_runtime(self, execute):
         result = judge0_result(6, compile_output='bad')
         result['time'] = None
         execute.return_value = result
-        self.assertEqual(compiler.judge('c', 'cpp', self.cases()), ('Compilation Error', 0, 3, 0))
+        self.assertEqual(compiler.judge('c', 'cpp', self.cases()), ('Compilation Error', 0, 3, None))
+
+
+    @mock.patch('codecafe.compiler.execute')
+    def test_runtime_error_has_unknown_runtime_and_tle_keeps_it(self, execute):
+        execute.return_value = judge0_result(11, stderr='Traceback', time='0.2')
+        self.assertEqual(compiler.judge('c', 'py', self.cases())[::3], ('Runtime Error on tc 1', None))
+        execute.return_value = judge0_result(5, time='5.01')
+        self.assertEqual(compiler.judge('c', 'py', self.cases()), ('Time Limit Exceeded on tc 1', 0, 3, 5010))
+
+    @mock.patch('codecafe.compiler.execute')
+    def test_run_code_reports_exit_code(self, execute):
+        result = judge0_result(3, stdout='5')
+        result['exit_code'] = 0
+        execute.return_value = result
+        self.assertEqual(compiler.run_code('x', 'py', '2 3')['exit_code'], 0)
 
 
 class ProblemStatsTests(APITestCase):
@@ -209,6 +225,7 @@ class ProblemStatsTests(APITestCase):
         self.sub(self.bob, 1, 'Wrong Answer on tc 2')
         self.sub(self.bob, 1, 'Accepted')
         by_id = {q['id']: q for q in self.client.get('/api/questions/').data}
+        self.assertEqual([by_id[i]['test_count'] for i in (1, 2, 3)], [3, 2, 3])
         self.assertEqual(by_id[1]['status'], 'new')
         self.assertEqual(by_id[1]['acceptance_rate'], 50.0)
         self.assertIsNone(by_id[2]['acceptance_rate'])
@@ -232,6 +249,14 @@ class ProblemStatsTests(APITestCase):
         self.assertIsNone(by_id[3]['best_runtime_ms'])
         self.assertEqual(by_id[3]['acceptance_rate'], 100.0)
 
+    def test_submissions_summary_counts(self):
+        self.sub(self.alice, 1, 'Accepted')
+        self.sub(self.bob, 1, 'Accepted')
+        self.sub(self.bob, 2, 'Accepted')
+        self.assertEqual(self.client.get('/api/submissions/summary/').data, {'everyone': 3, 'mine': None})
+        self.auth(self.bob)
+        self.assertEqual(self.client.get('/api/submissions/summary/').data, {'everyone': 3, 'mine': 2})
+
     def test_questions_list_with_bad_token_is_rejected(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token nope')
         self.assertEqual(self.client.get('/api/questions/').status_code, 401)
@@ -247,6 +272,7 @@ class ProblemStatsTests(APITestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data, {
             'username': 'alice',
+            'email': 'alice@example.com',
             'submissions': 3,
             'solved': 1,
             'attempted': 1,
@@ -305,3 +331,25 @@ class MigrationBackfillTests(TransactionTestCase):
         self.assertEqual(by_pk[0].question.slug, 'sum-of-two-numbers')
         # unknown, not zero
         self.assertEqual([(s.runtime_ms, s.passed, s.total) for s in by_pk][0], (None, None, None))
+
+
+class SeedDemoTests(APITestCase):
+    fixtures = ['sample_problems']
+
+    def test_fixtures_hold_twelve_problems_with_cases_and_examples(self):
+        from .models import QuestionList
+        self.assertEqual(QuestionList.objects.count(), 12)
+        for q in QuestionList.objects.all():
+            self.assertGreaterEqual(q.testcases_set.count(), 2, q.slug)
+            self.assertTrue(q.examples and q.constraints and q.input_format and q.output_format, q.slug)
+        roasts = [q.difficulty for q in QuestionList.objects.order_by('id')]
+        self.assertEqual((roasts.count('light'), roasts.count('medium'), roasts.count('dark')), (4, 5, 3))
+
+    def test_seed_demo_is_idempotent_and_gives_riya_a_week(self):
+        from django.core.management import call_command
+        from io import StringIO
+        call_command('seed_demo', stdout=StringIO())
+        call_command('seed_demo', stdout=StringIO())
+        riya = User.objects.get(username='riya_s')
+        self.assertEqual(riya.submissions.count(), 9)
+        self.assertIsNone(riya.submissions.filter(verdict='Compilation Error').get().runtime_ms)

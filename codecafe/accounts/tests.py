@@ -47,3 +47,21 @@ class AuthTests(APITestCase):
     def test_token_check_requires_auth(self):
         res = self.client.post('/accounts/test_token', format='json')
         self.assertEqual(res.status_code, 401)
+
+
+class SignupFieldTests(APITestCase):
+    def test_email_is_required_and_validated(self):
+        base = {'username': 'carol', 'password': 'Brew-1234-coffee'}
+        res = self.client.post('/accounts/signup', {**base, 'email': 'not-an-email'}, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('email', res.data)
+        res = self.client.post('/accounts/signup', base, format='json')
+        self.assertIn('email', res.data)
+
+    def test_test_token_returns_email(self):
+        res = self.client.post('/accounts/signup', {
+            'username': 'carol', 'email': 'carol@example.com', 'password': 'Brew-1234-coffee',
+        }, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {res.data['token']}")
+        me = self.client.post('/accounts/test_token', format='json')
+        self.assertEqual((me.data['username'], me.data['email']), ('carol', 'carol@example.com'))

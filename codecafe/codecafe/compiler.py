@@ -91,6 +91,7 @@ def run_code(code, lang, stdin=''):
         'output': result.get('stdout') or '',
         'error': error,
         'runtime_ms': _runtime_ms(result),
+        'exit_code': result.get('exit_code'),
     }
 
 
@@ -110,7 +111,7 @@ def judge(code, lang, testcases):
     """Run the testcases in order and stop at the first failure.
 
     Returns (verdict, passed, total, runtime_ms); runtime_ms is the slowest
-    test case that ran.
+    test case that ran, or None for a compile or runtime error.
     """
     testcases = list(testcases)
     total = len(testcases)
@@ -121,12 +122,13 @@ def judge(code, lang, testcases):
         runtime_ms = max(runtime_ms, _runtime_ms(result))
         status_id = (result.get('status') or {}).get('id')
 
+        # A program that never compiled or crashed has no meaningful runtime: unknown (None), not 0.
         if status_id == COMPILATION_ERROR:
-            return 'Compilation Error', passed, total, runtime_ms
+            return 'Compilation Error', passed, total, None
         if status_id == TIME_LIMIT:
             return f'Time Limit Exceeded on tc {idx}', passed, total, runtime_ms
         if status_id != ACCEPTED:
-            return f'Runtime Error on tc {idx}', passed, total, runtime_ms
+            return f'Runtime Error on tc {idx}', passed, total, None
         if _normalize(result.get('stdout')) != _normalize(tc.expected_output):
             return f'Wrong Answer on tc {idx}', passed, total, runtime_ms
         passed += 1

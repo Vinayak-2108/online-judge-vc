@@ -28,6 +28,7 @@ def apiOverview(request):
         'Run code': '/api/questions/run',
         'Submit code': '/api/questions/submit',
         'Submissions': '/api/submissions/?mine=1&limit=50&offset=0',
+        'Submission totals': '/api/submissions/summary/',
         'Submission detail': '/api/submissions/<id>/',
         'Me': '/api/me/',
     }
@@ -61,7 +62,7 @@ def _problem_stats(user):
 
 @api_view(['GET'])
 def questionsList(request):
-    questions = QuestionList.objects.order_by('id')
+    questions = QuestionList.objects.annotate(test_count=Count('testcases')).order_by('id')
     serializer = QuestionListItemSerializer(
         questions, many=True, context={'stats': _problem_stats(request.user)},
     )
@@ -94,6 +95,15 @@ def submissionsList(request):
 
 
 @api_view(['GET'])
+def submissionsSummary(request):
+    """Totals for the tab labels: everyone's submissions and, when signed in, the caller's own."""
+    return Response({
+        'everyone': Submissions.objects.count(),
+        'mine': Submissions.objects.filter(user=request.user).count() if request.user.is_authenticated else None,
+    })
+
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def submissionDetail(request, pk):
     """One of the caller's own submissions, including its code."""
@@ -123,6 +133,7 @@ def me(request):
 
     return Response({
         'username': request.user.username,
+        'email': request.user.email,
         'submissions': Submissions.objects.filter(user=request.user).count(),
         'solved': sum(b['solved'] for b in by_roast.values()),
         'attempted': sum(b['attempted'] for b in by_roast.values()),

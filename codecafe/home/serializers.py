@@ -7,11 +7,16 @@ from .models import QuestionList, TestCases, Submissions
 class QuestionsSerializer(serializers.ModelSerializer):
     """Full problem, as the problem page needs it."""
 
+    test_count = serializers.SerializerMethodField()
+
+    def get_test_count(self, obj):
+        return obj.testcases_set.count()
+
     class Meta:
         model = QuestionList
         fields = [
             'id', 'name', 'slug', 'difficulty', 'description',
-            'input_format', 'output_format', 'constraints', 'examples',
+            'input_format', 'output_format', 'constraints', 'examples', 'test_count',
         ]
 
 
@@ -21,6 +26,7 @@ class QuestionListItemSerializer(serializers.ModelSerializer):
     Expects the view to put `stats` (question id -> dict) in the context.
     """
 
+    test_count = serializers.IntegerField(read_only=True)
     status = serializers.SerializerMethodField()
     acceptance_rate = serializers.SerializerMethodField()
     best_runtime_ms = serializers.SerializerMethodField()
@@ -29,7 +35,7 @@ class QuestionListItemSerializer(serializers.ModelSerializer):
         model = QuestionList
         fields = [
             'id', 'name', 'slug', 'difficulty', 'description',
-            'input_format', 'output_format', 'constraints', 'examples',
+            'input_format', 'output_format', 'constraints', 'examples', 'test_count',
             'status', 'acceptance_rate', 'best_runtime_ms',
         ]
 

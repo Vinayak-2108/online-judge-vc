@@ -10,6 +10,7 @@ urlpatterns = [
     path("questions/run", views.run_code, name="run_code"),
     path("questions/submit", views.submit_code, name="submit_code"),
     path("submissions/", views.submissionsList, name="submissions"),
+    path("submissions/summary/", views.submissionsSummary, name="submissionsSummary"),
     path("submissions/<int:pk>/", views.submissionDetail, name="submissionDetail"),
     path("me/", views.me, name="me"),
 ]
