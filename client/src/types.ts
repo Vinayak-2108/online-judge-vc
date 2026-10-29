@@ -56,9 +56,9 @@ export interface Submission {
     verdict: string;
     submission_time: string;
     language: string;
-    passed: number;
-    total: number;
-    runtime_ms: number;
+    passed: number | null;
+    total: number | null;
+    runtime_ms: number | null;
 }
 
 export interface AuthResponse {

@@ -45,7 +45,7 @@ const Tabs26 = () => {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className='h-full min-w-fit rounded-none border-0 border-b-2 border-transparent px-1 sm:px-3 py-1 font-medium text-muted-foreground transition-all hover:border-muted-foreground/30 hover:text-foreground data-[state=active]:border-brand-fill data-[state=active]:text-foreground data-[state=active]:shadow-none! dark:hover:text-foreground text-sm'
+                className='h-full min-w-fit rounded-none border-0 border-b-2 border-transparent px-1 sm:px-3 py-1 font-medium text-muted-foreground transition-colors hover:border-muted-foreground/30 hover:text-foreground data-[state=active]:border-brand-fill data-[state=active]:text-foreground data-[state=active]:shadow-none! dark:hover:text-foreground text-sm'
               >
                 {tab.name}
               </TabsTrigger>

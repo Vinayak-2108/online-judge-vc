@@ -8,11 +8,11 @@ export default function Home(){
         <>
         <Navbar />
         <div className="m-3 p-5 text-center">
-            <h1 className="text-[4rem] font-bold text-[#E6B17E]">Freshly brewed questions</h1>
-            <h1 className="text-[5rem] font-bold text-[#C56E33]">For you to solve!</h1>
+            <h1 className="text-[4rem] font-bold text-foreground">Freshly brewed questions</h1>
+            <h1 className="text-[5rem] font-bold text-brand">For you to solve!</h1>
         </div>
         <div className="m-3 p-5 text-center">
-            <button className="text-[2rem] font-bold text-white p-3 hover:bg-[#ec8626] bg-[#C56E33]  rounded-sm" onClick={() => navigate('/problems')}>Start Brewing</button>
+            <button className="text-[2rem] font-bold text-primary-foreground p-3 hover:bg-brand-fill hover:text-brand-ink bg-primary  rounded-sm" onClick={() => navigate('/problems')}>Start Brewing</button>
         </div>
 
    

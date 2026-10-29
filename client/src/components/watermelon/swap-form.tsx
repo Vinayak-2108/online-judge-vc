@@ -102,7 +102,7 @@ export const SwapForm: FC<SwapFormProps> = ({
                             </label>
                             <input
                                 type="email"
-                                placeholder="name@example.com"
+                                placeholder="you@school.edu"
                                 className="w-full px-4 py-2.5 rounded-xl border-[1.2px] border-[#E7E7E7] dark:border-zinc-800 bg-white dark:bg-zinc-900 focus:ring-1 focus:ring-black dark:focus:ring-zinc-400 outline-none  text-[15px] sm:text-base"
                             />
                         </div>

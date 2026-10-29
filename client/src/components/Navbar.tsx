@@ -1,138 +1,47 @@
-import { useState, useEffect } from "react";
-import Logo from "../assets/logo-white.png";
-import { Link } from "react-router";
-import { auth_user, logout_user } from "../controllers/UserRoutes";
+import { Link, useNavigate } from "react-router";
 import ThemeToggle from "./ThemeToggle";
+import Wordmark from "./Wordmark";
+import { useAuth } from "../lib/auth";
 
+const link = "rounded-control px-2 py-1 text-[14px] text-foreground no-underline hover:bg-raised";
+
+/** The public top bar (landing, about, sign in): the same frame tint and wordmark as the app shell. */
 const Navbar = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [userName, setUserName] = useState("");
-    const [logout, setLogout] = useState(false);
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
-    };
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        if(localStorage.getItem("token")){
-            auth_user().then((data) => {
-                if(data.tag){
-                    setUserName(data.username ?? "");
-                } else {
-                    // token revoked or expired
-                    localStorage.removeItem("token");
-                }
-            });
-        }
-    }, [logout]);
     return (
-        <nav className="flex w-full items-center justify-between bg-[#fa840c] py-4 px-4">
-            <div className="flex items-center">
-                <Link to="/">
-                    <img src={Logo} alt="" className="w-32 h-8" />
+        <header className="flex min-h-14 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border bg-frame px-4 py-2 text-foreground">
+            <Wordmark />
+            <nav aria-label="Main" className="flex flex-wrap items-center gap-1">
+                <Link to="/problems" className={link}>
+                    Problems
                 </Link>
-            </div>
-
-            <ul className="hidden md:flex md:items-center">
-                {localStorage.getItem("token") ? (
+                {user ? (
                     <>
-                        <li className="ml-4 text-white">
-                            {userName}
-                        </li>
-                        <li className="ml-4">
-                            <Link
-                                to="/problems"
-                                className="text-white hover:text-[#ffd6af]"
-                                
-                            >
-                                Problems
-                            </Link>
-                        </li>
-                        <li className="ml-4">
-                            <Link
-                                to="/submissions"
-                                className="text-white hover:text-[#ffd6af]"
-                                
-                            >
-                                Submissions
-                            </Link>
-                        </li>
-                        <li className="ml-4">
-                            <Link
-                                to="/signup"
-                                className="text-white hover:text-[#ffd6af]"
-                                onClick={async () => {
-                                    setLogout(true);
-                                    await logout_user();
-                                    window.location.reload();
-                                }}
-                            >
-                                Logout
-                            </Link>
-                        </li>
+                        <Link to="/submissions" className={link}>
+                            Submissions
+                        </Link>
+                        <span className="px-2 text-[14px] text-muted-ink">{user}</span>
+                        <button
+                            type="button"
+                            className={link}
+                            onClick={async () => {
+                                await logout();
+                                navigate("/signup");
+                            }}
+                        >
+                            Log out
+                        </button>
                     </>
                 ) : (
-                    <>
-                        <li className="ml-4">
-                            <Link
-                                to="/signup"
-                                className="text-white hover:text-[#ffd6af]"
-                            >
-                                Login/Register
-                            </Link>
-                        </li>
-                    </>
+                    <Link to="/signup" className={link}>
+                        Log in / Register
+                    </Link>
                 )}
-                <li className="ml-4 text-white">
-                    <ThemeToggle />
-                </li>
-            </ul>
-            <div className="md:hidden flex flex-col p-2">
-                <div className="">
-                    <button
-                        className="text-gray-800 focus:outline-hidden"
-                        onClick={toggleMenu}
-                    >
-                        <svg
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                        </svg>
-                    </button>
-                </div>
-
-                {isMenuOpen && (
-                    <ul className="md:hidden">
-                        <li className="my-2 text-gray-800">
-                            <ThemeToggle />
-                        </li>
-                        <li className="my-2">
-                            <a
-                                href="#"
-                                className="text-gray-800 hover:text-gray-600"
-                            >
-                                Register
-                            </a>
-                        </li>
-                        <li className="my-2">
-                            <a
-                                href="#"
-                                className="text-gray-800 hover:text-gray-600"
-                            >
-                                Login
-                            </a>
-                        </li>
-                    </ul>
-                )}
-            </div>
-        </nav>
+                <ThemeToggle className="ml-2" />
+            </nav>
+        </header>
     );
 };
 

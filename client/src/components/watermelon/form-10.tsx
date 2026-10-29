@@ -80,7 +80,7 @@ const Form10 = () => {
               <Input
                 placeholder="you@company.com"
                 {...form.register('email')}
-                className="focus-visible:ring-primary/20 focus-visible:border-primary/50 bg-muted rounded-sm  transition-all focus:scale-[1.01] "
+                className="focus-visible:ring-primary/20 focus-visible:border-primary/50 bg-muted rounded-sm  transition-colors focus:scale-[1.01] "
               />
             </FieldContent>
             <FieldDescription>
@@ -143,7 +143,7 @@ const Form10 = () => {
                         <label
                           key={item.value}
                           htmlFor={item.value}
-                          className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-sm border px-3 py-2 text-xs transition-all ${isActive ? 'border-primary bg-primary/10' : 'bg-muted border-border/50 hover:bg-muted'} `}
+                          className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-sm border px-3 py-2 text-xs transition-colors ${isActive ? 'border-primary bg-primary/10' : 'bg-muted border-border/50 hover:bg-muted'} `}
                         >
                           <RadioGroupItem
                             value={item.value}
@@ -169,7 +169,7 @@ const Form10 = () => {
               <Textarea
                 placeholder="Describe what you're building and what problem it solves..."
                 {...form.register('brief')}
-                className="focus-visible:ring-primary/20 focus-visible:border-primary/50 bg-muted rounded-sm  transition-all focus:scale-[1.01] "
+                className="focus-visible:ring-primary/20 focus-visible:border-primary/50 bg-muted rounded-sm  transition-colors focus:scale-[1.01] "
               />
             </FieldContent>
             <FieldDescription>
@@ -182,7 +182,7 @@ const Form10 = () => {
 
           <Button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-sm transition-all hover:scale-[1.02] active:scale-95"
+            className="flex w-full items-center justify-center gap-2 rounded-sm transition-colors hover:scale-[1.02] active:scale-95"
           >
             Create Project
           </Button>

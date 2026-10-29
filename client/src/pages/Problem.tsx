@@ -1,6 +1,5 @@
 import { Fragment, useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import {
     get_all_questions,
     run_compiler,
@@ -27,10 +26,17 @@ const Problem = () => {
     const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
     const [userName, setUserName] = useState("");
 
-    const { id } = useParams();
+    const { slug } = useParams();
+    const navigate = useNavigate();
     const editorTheme = useEditorTheme();
     const valext = [codeLang === "py" ? python() : cpp()];
-    const probIndex = parseInt(id ?? "", 10);
+    // /problems/:slug, with the old numeric /problems/:id still resolving.
+    const current = problem.find((p) => p.slug === slug) ?? problem.find((p) => String(p.id) === slug);
+    const probIndex = current?.id ?? NaN;
+
+    useEffect(() => {
+        if (current && current.slug !== slug) navigate(`/problems/${current.slug}`, { replace: true });
+    }, [current, slug, navigate]);
 
     useEffect(() => {
         if (localStorage.getItem("token")) {
@@ -100,32 +106,31 @@ const Problem = () => {
     };
     return (
         <>
-            <Navbar />
             {isUserLoggedIn ? (
                 <>
                     {problem
-                        .filter((prob) => prob.id === probIndex)
+                        .filter((prob) => prob.id === current?.id)
                         .map((temp) => (
                             <Fragment key={temp.id}>
                                 <div className="grid grid-rows-2  md:grid-cols-2">
                                     <div className="bg-raised rounded-sm m-3 p-2">
-                                        <h1 className="text-3xl m-3 uppercase font-semibold text-[#C56E33]">
+                                        <h1 className="text-3xl m-3 uppercase font-semibold text-brand">
                                             Problem:{" "}
-                                            <span className="text-[#E6B17E] capitalize">
+                                            <span className="text-foreground capitalize">
                                                 {temp.name}
                                             </span>
                                         </h1>
                                         <br />
-                                        <h3 className="text-2xl m-3 uppercase font-semibold text-[#C56E33]">
+                                        <h3 className="text-2xl m-3 uppercase font-semibold text-brand">
                                             Description: <br />
-                                            <span className="text-[#E6B17E] normal-case font-medium">
+                                            <span className="text-foreground normal-case font-medium">
                                                 {temp.description}
                                             </span>
                                         </h3>
                                         <br></br>
-                                        <h3 className="text-2xl m-3 uppercase font-semibold text-[#C56E33]">
+                                        <h3 className="text-2xl m-3 uppercase font-semibold text-brand">
                                             Difficulty:{" "}
-                                            <span className="text-[#E6B17E] normal-case font-medium">
+                                            <span className="text-foreground normal-case font-medium">
                                                 {temp.difficulty} roast
                                             </span>
                                         </h3>
@@ -178,8 +183,8 @@ const Problem = () => {
                                                 disabled={code === ""}
                                                 className={`m-3 p-2 bg-raised rounded-lg font-semibold  ${
                                                     code === ""
-                                                        ? "bg-gray-200 text-gray-500"
-                                                        : "hover:bg-[#E6B17E] bg-raised hover:text-white"
+                                                        ? "bg-raised text-muted-foreground"
+                                                        : "hover:bg-raised bg-raised hover:text-foreground"
                                                 }  text-xl`}
                                             >
                                                 Run
@@ -193,8 +198,8 @@ const Problem = () => {
                                                 disabled={code === ""}
                                                 className={`m-3 p-2 bg-raised rounded-lg font-semibold  ${
                                                     code === ""
-                                                        ? "bg-gray-200 text-gray-500"
-                                                        : "hover:bg-[#E6B17E] bg-raised hover:text-white"
+                                                        ? "bg-raised text-muted-foreground"
+                                                        : "hover:bg-raised bg-raised hover:text-foreground"
                                                 }  text-xl`}
                                             >
                                                 Submit
@@ -224,11 +229,11 @@ const Problem = () => {
                 </>
             ) : (
                 <div className="m-3 p-5 text-center">
-                    <h1 className="text-[5rem] font-bold text-[#C56E33]">Login to continue</h1>
-                    <motion.button className={`m-3 p-2 bg-[#C56E33] hover:bg-[#fa840c] rounded-lg font-semibold text-xl`}>
+                    <h1 className="text-[5rem] font-bold text-brand">Login to continue</h1>
+                    <motion.button className={`m-3 p-2 bg-primary hover:bg-brand-fill rounded-lg font-semibold text-xl`}>
                         <Link
                             to="/signup"
-                            className="text-white"
+                            className="text-primary-foreground"
                         >
                             Login
                         </Link>

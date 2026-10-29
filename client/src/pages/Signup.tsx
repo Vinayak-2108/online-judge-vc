@@ -152,8 +152,7 @@ const Signup = () => {
                         <div className="content">
                             <h3>New here ?</h3>
                             <p>
-                                Lorem ipsum, dolor sit amet consectetur
-                                adipisicing elit. Debitis, ex ratione. Aliquid!
+                                Make an account to submit solutions and keep track of what you have brewed.
                             </p>
                             <motion.button
                                 className="btn transparent"
@@ -170,9 +169,7 @@ const Signup = () => {
                         <div className="content">
                             <h3>One of us ?</h3>
                             <p>
-                                Lorem ipsum dolor sit amet consectetur
-                                adipisicing elit. Nostrum laboriosam ad
-                                deleniti.
+                                Welcome back. Sign in to pick up where you left off.
                             </p>
                             <motion.button
                                 className="btn transparent"

@@ -1,4 +1,4 @@
-import type { AuthResponse } from "../types";
+import type { AuthResponse, Me } from "../types";
 
 const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/accounts`;
 
@@ -45,4 +45,13 @@ export const logout_user = async() => {
         },
     }).catch(() => {});
     localStorage.removeItem('token');
+}
+
+export const get_me = async(): Promise<Me | null> => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const res = await fetch(`${base.replace(/\/accounts$/, '')}/api/me/`, {
+        headers: { "Authorization": `Token ${token}` },
+    });
+    return res.ok ? await res.json() : null;
 }

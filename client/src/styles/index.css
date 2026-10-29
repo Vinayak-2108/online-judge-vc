@@ -19,6 +19,7 @@
     --raised: #f4f2ee;
     --border: #ebe8e3;
     --rule: #f2f0ec;
+    --active: #ece8e2; /* active nav pill on the frame */
     --control: #d4d0c9;
     --text: #1a1612;
     --muted: #615a52;
@@ -50,6 +51,7 @@
     --raised: #1e1e1e;
     --border: #262626;
     --rule: #1c1c1c;
+    --active: #1e1e1e;
     --control: #3d3d3d;
     --text: #f5f3ef;
     --muted: #b4b0aa;
@@ -73,28 +75,16 @@
     --warning-bg: #2a2112;
 }
 
-/* Tailwind v3 palette values for the legacy screens (v4 moved to oklch). Removed with the screens. */
-@theme {
-    --color-gray-200: #e5e7eb;
-    --color-gray-500: #6b7280;
-    --color-gray-600: #4b5563;
-    --color-gray-800: #1f2937;
-    --color-green-500: #22c55e;
-    --color-green-600: #16a34a;
-    --color-red-500: #ef4444;
-    --color-red-600: #dc2626;
-    --color-yellow-600: #ca8a04;
-}
-
 /* Token roles as Tailwind utilities (bg-frame, text-muted, border-rule, ...) and the shadcn names. */
 @theme inline {
     --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; /* taste-skill-ignore */
 
     --color-frame: var(--frame);
     --color-sheet: var(--sheet);
     --color-raised: var(--raised);
     --color-rule: var(--rule);
+    --color-active: var(--active);
     --color-control: var(--control);
     --color-text: var(--text);
     --color-muted-ink: var(--muted);
@@ -164,6 +154,11 @@
         opacity: 0.8;
     }
 
+    :focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+    }
+
     ::selection {
         background: var(--brand-fill);
         color: var(--brand-ink);
@@ -171,5 +166,11 @@
 }
 
 @utility font-tabular {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Plex Mono has one job: code, submission numbers and runtimes. */
+@utility font-code {
+    font-family: var(--font-mono); /* taste-skill-ignore */
     font-variant-numeric: tabular-nums;
 }

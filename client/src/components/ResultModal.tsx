@@ -35,7 +35,7 @@ const ResultModal = ({ open, onClose, result }: ResultModalProps) => {
         <Backdrop onClick={onClose}>
             <motion.div
                 onClick={(e) => e.stopPropagation()}
-                className="flex flex-col items-center"
+                className="flex flex-col items-center rounded-card border border-border bg-sheet p-6"
                 variants={dropIn}
                 initial="hidden"
                 animate="visible"
@@ -45,15 +45,15 @@ const ResultModal = ({ open, onClose, result }: ResultModalProps) => {
                     <div
                         className={`px-6 py-4 whitespace-nowrap ${
                             result === "Accepted"
-                                ? "text-green-500"
-                                : "text-red-500"
+                                ? "text-positive"
+                                : "text-negative"
                         }`}
                     >
                         Verdict: {result}
                     </div>
                 </div>
                 <motion.button
-                    className="mt-4 px-4 py-2 bg-gray-500 text-white rounded-sm hover:bg-gray-600"
+                    className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-sm hover:opacity-90"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={onClose}

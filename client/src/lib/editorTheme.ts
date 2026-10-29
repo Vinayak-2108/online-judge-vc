@@ -5,13 +5,15 @@ import type { Extension } from "@codemirror/state";
 import { tokens, type TokenSet } from "./tokens";
 import { useTheme } from "./theme";
 
+const CODE_FONT = '"IBM Plex Mono", ui-monospace, monospace'; // taste-skill-ignore: this is literal code
+
 /** Builds an editor theme (chrome + syntax colours) from one token set. */
 function build(c: TokenSet, dark: boolean): Extension {
     const chrome = EditorView.theme(
         {
             "&": { backgroundColor: c.sheet, color: c.text, height: "100%" },
-            ".cm-content": { caretColor: c.text, fontFamily: '"IBM Plex Mono", ui-monospace, monospace' },
-            ".cm-scroller": { fontFamily: '"IBM Plex Mono", ui-monospace, monospace', lineHeight: "1.6" },
+            ".cm-content": { caretColor: c.text, fontFamily: CODE_FONT },
+            ".cm-scroller": { fontFamily: CODE_FONT, lineHeight: "1.6" },
             ".cm-cursor, .cm-dropCursor": { borderLeftColor: c.text },
             "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": {
                 backgroundColor: dark ? "#3d3d3d" : "#e6dccf",
