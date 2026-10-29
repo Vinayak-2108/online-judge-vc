@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Logo from "../assets/logo-white.png";
 import { Link } from "react-router";
 import { auth_user, logout_user } from "../controllers/UserRoutes";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -81,6 +82,9 @@ const Navbar = () => {
                         </li>
                     </>
                 )}
+                <li className="ml-4 text-white">
+                    <ThemeToggle />
+                </li>
             </ul>
             <div className="md:hidden flex flex-col p-2">
                 <div className="">
@@ -106,6 +110,9 @@ const Navbar = () => {
 
                 {isMenuOpen && (
                     <ul className="md:hidden">
+                        <li className="my-2 text-gray-800">
+                            <ThemeToggle />
+                        </li>
                         <li className="my-2">
                             <a
                                 href="#"

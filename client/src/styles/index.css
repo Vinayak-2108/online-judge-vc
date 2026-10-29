@@ -1,7 +1,79 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/archivo/wdth.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
 
-/* Tailwind v3 palette values for every colour utility the app uses (v4 moved to oklch). */
+/*
+ * Design tokens (docs/revamp-plan.md, "Tokens").
+ * Light is "the printed menu", dark is "the chalkboard". The attribute on <html>
+ * is set before first paint by the inline script in index.html and by lib/theme.ts.
+ */
+:root,
+:root[data-theme="light"] {
+    color-scheme: light;
+
+    --frame: #f7f5f2;
+    --sheet: #ffffff;
+    --raised: #f4f2ee;
+    --border: #ebe8e3;
+    --rule: #f2f0ec;
+    --control: #d4d0c9;
+    --text: #1a1612;
+    --muted: #615a52;
+
+    --brand: #c45200; /* text and marks */
+    --brand-fill: #f86f03; /* fills, ink label on top */
+    --brand-ink: #1a1612;
+
+    --primary: #1a1612;
+    --primary-ink: #ffffff;
+
+    --roast-light: #b3845a;
+    --roast-medium: #8b5a2b;
+    --roast-dark: #3b2414;
+
+    --positive: #247b50;
+    --positive-bg: #dcfae5;
+    --negative: #c4242a;
+    --negative-bg: #ffedea;
+    --warning: #92400e;
+    --warning-bg: #fffbeb;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --frame: #0d0d0d;
+    --sheet: #141414;
+    --raised: #1e1e1e;
+    --border: #262626;
+    --rule: #1c1c1c;
+    --control: #3d3d3d;
+    --text: #f5f3ef;
+    --muted: #b4b0aa;
+
+    --brand: #ff8a2a;
+    --brand-fill: #ff8a2a;
+    --brand-ink: #1a1612;
+
+    --primary: #f5f3ef;
+    --primary-ink: #1a1612;
+
+    --roast-light: #d9b48f;
+    --roast-medium: #a8723f;
+    --roast-dark: #8a5a36;
+
+    --positive: #3fc07a;
+    --positive-bg: #172a1d;
+    --negative: #e5566f;
+    --negative-bg: #2c1a20;
+    --warning: #f0b45a;
+    --warning-bg: #2a2112;
+}
+
+/* Tailwind v3 palette values for the legacy screens (v4 moved to oklch). Removed with the screens. */
 @theme {
     --color-gray-200: #e5e7eb;
     --color-gray-500: #6b7280;
@@ -14,7 +86,71 @@
     --color-yellow-600: #ca8a04;
 }
 
+/* Token roles as Tailwind utilities (bg-frame, text-muted, border-rule, ...) and the shadcn names. */
+@theme inline {
+    --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --color-frame: var(--frame);
+    --color-sheet: var(--sheet);
+    --color-raised: var(--raised);
+    --color-rule: var(--rule);
+    --color-control: var(--control);
+    --color-text: var(--text);
+    --color-muted-ink: var(--muted);
+    --color-brand: var(--brand);
+    --color-brand-fill: var(--brand-fill);
+    --color-brand-ink: var(--brand-ink);
+    --color-roast-light: var(--roast-light);
+    --color-roast-medium: var(--roast-medium);
+    --color-roast-dark: var(--roast-dark);
+    --color-positive: var(--positive);
+    --color-positive-bg: var(--positive-bg);
+    --color-negative: var(--negative);
+    --color-negative-bg: var(--negative-bg);
+    --color-warning: var(--warning);
+    --color-warning-bg: var(--warning-bg);
+
+    /* shadcn / Watermelon semantic names. "accent" here is the hover surface, the brand orange is "brand". */
+    --color-background: var(--sheet);
+    --color-foreground: var(--text);
+    --color-card: var(--sheet);
+    --color-card-foreground: var(--text);
+    --color-popover: var(--sheet);
+    --color-popover-foreground: var(--text);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-ink);
+    --color-secondary: var(--raised);
+    --color-secondary-foreground: var(--text);
+    --color-muted: var(--raised);
+    --color-muted-foreground: var(--muted);
+    --color-accent: var(--raised);
+    --color-accent-foreground: var(--text);
+    --color-destructive: var(--negative);
+    --color-success: var(--positive);
+    --color-border: var(--border);
+    --color-input: var(--control);
+    --color-ring: var(--brand);
+
+    --radius-sheet: 16px;
+    --radius-card: 8px;
+    --radius-control: 6px;
+}
+
 @layer base {
+    html {
+        font-family: var(--font-sans);
+    }
+
+    body {
+        background: var(--sheet);
+        color: var(--text);
+    }
+
+    * {
+        border-color: var(--border);
+    }
+
     /* Tailwind 4 keeps buttons at the default cursor; v3 showed a pointer. */
     button:not(:disabled),
     [role="button"]:not(:disabled) {
@@ -24,6 +160,16 @@
     /* v3 placeholder colour was gray-400; v4 uses currentColor at 50%. */
     input::placeholder,
     textarea::placeholder {
-        color: #9ca3af;
+        color: var(--muted);
+        opacity: 0.8;
     }
+
+    ::selection {
+        background: var(--brand-fill);
+        color: var(--brand-ink);
+    }
+}
+
+@utility font-tabular {
+    font-variant-numeric: tabular-nums;
 }

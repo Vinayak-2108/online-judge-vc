@@ -25,13 +25,13 @@ const Submissions = () => {
     return (
         <>
             <Navbar />
-            <div className="flex flex-col items-center justify-center bg-[#f9f9f9] py-10">
+            <div className="flex flex-col items-center justify-center bg-sheet py-10">
                 <div className="flex flex-col mt-6">
                     <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                         <div className="py-2 align-middle inline-block">
                             <div className="shadow-sm overflow-hidden sm:rounded-lg">
                                 <table className="min-w-full text-xl text-gold">
-                                    <thead className="bg-[#e2e2e2] text-xl uppercase border-b-2 border-gray-500 font-medium">
+                                    <thead className="bg-raised text-xl uppercase border-b-2 border-gray-500 font-medium">
                                         <tr>
                                             <th></th>
                                             <th
@@ -63,7 +63,7 @@ const Submissions = () => {
                                     {submissions.reverse().map((sub, index) => (
                                         <Fragment key={index}>
                                             <tbody
-                                                className="bg-[#e2e2e2]"
+                                                className="bg-raised"
                                             >
                                                 <tr className="bg-gray bg-opacity-20">
                                                     <td className="pl-4">

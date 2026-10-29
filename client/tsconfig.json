@@ -12,6 +12,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "paths": { "@/*": ["./src/*"] },
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src", "vite.config.ts"]
