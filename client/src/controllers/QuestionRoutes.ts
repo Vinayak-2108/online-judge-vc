@@ -10,11 +10,13 @@ const authHeaders = () => ({
 export const get_all_questions = async(): Promise<Question[]> => {
     // The token is optional: with it each problem carries the caller's status.
     const token = localStorage.getItem('token');
-    const res = await fetch(`${base}/questions/`, {
+    let res = await fetch(`${base}/questions/`, {
         headers: token ? { "Authorization": `Token ${token}` } : {},
     });
+    // A revoked token is rejected outright; fall back to the anonymous list.
+    if (res.status === 401) res = await fetch(`${base}/questions/`);
     const ans = await res.json();
-    return ans;
+    return Array.isArray(ans) ? ans : [];
 }
 export const get_question = async(id: number | string) => {
     const res = await fetch(`${base}/questions/${id}/`);
