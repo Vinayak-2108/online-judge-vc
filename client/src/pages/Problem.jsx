@@ -71,8 +71,7 @@ const Problem = () => {
 
         try {
             run_compiler(payload).then((data) => {
-                console.log(data);
-                setOutputCode(data.output);
+                setOutputCode(data.error || data.output || "(no output)");
             });
         } catch (error) {
             console.log(error);
@@ -88,11 +87,8 @@ const Problem = () => {
         // console.log(payload);
         try {
             submit_compiler(payload).then((data) => {
-                // console.log(data);
-                console.log(data);
-                console.log(data.verdict);
                 setStateVerdict(true);
-                setOutputVerdict(data.verdict);
+                setOutputVerdict(data.verdict || data.error);
                 setOpenModal(true);
                 scrollToTop();
             });

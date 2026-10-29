@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Code Cafe: phone, landing hero</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap"> <!-- taste-skill-ignore: Plex Mono loads only for code -->
+<style>
+body{margin:0}
+a{color:#c45200} a:hover{color:#1a1612}
+.display{font-stretch:62%;font-weight:800;text-transform:uppercase;line-height:.88;letter-spacing:-.01em;margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace} /* taste-skill-ignore: monospace only on code */
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #1a1612; padding: 12px; display: flex; flex-direction: column; overflow: hidden; font-family: 'Archivo', system-ui, sans-serif; color: #1a1612;">
+  <div data-ui="editor" style="height: 320px; flex: none; background: #f4f2ee; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px 16px 44px; box-sizing: border-box;">
+    <div style="width: 100%; background: #fbfaf8; border: 1px solid #ebe8e3; border-radius: 8px; overflow: hidden;"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+      <div style="display: flex; gap: 16px; padding: 10px 14px 0; background: #ffffff; border-bottom: 1px solid #ebe8e3; font-size: 14px;"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+        <span style="padding-bottom: 8px; color: #615a52;">C++</span>
+        <span style="padding-bottom: 6px; font-weight: 500; border-bottom: 2px solid #c45200;">Python</span>
+        <span style="padding-bottom: 8px; color: #615a52;">Java</span>
+      </div>
+      <pre class="mono" style="margin: 0; padding: 12px 14px; font-size: 12px; line-height: 1.7; overflow: hidden;"><span style="color: #c45200;">import</span> sys
+a, b = <span style="color: #c45200;">map</span>(<span style="color: #c45200;">int</span>, sys.stdin.read().split())
+<span style="color: #c45200;">print</span>(a + b)</pre>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #ffffff; border-top: 1px solid #ebe8e3;"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+        <label for="ph-input" style="font-size: 13px; color: #615a52;">Input</label>
+        <input id="ph-input" class="mono" value="2 3" readonly style="width: 72px; height: 32px; box-sizing: border-box; padding: 0 8px; border: 1px solid #d4d0c9; border-radius: 6px; font-size: 13px; color: #1a1612; background: #ffffff;"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+        <span style="flex: 1;"></span>
+        <button type="button" style="height: 32px; padding: 0 12px; border-radius: 6px; border: 1px solid #d4d0c9; background: #ffffff; color: #1a1612; font: 500 13px 'Archivo', sans-serif;">Run</button> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+        <button type="button" style="height: 32px; padding: 0 12px; border-radius: 6px; border: 0; background: #1a1612; color: #ffffff; font: 500 13px 'Archivo', sans-serif;">Submit</button>
+      </div>
+    </div>
+    <div style="width: 220px; background: #ffffff; padding: 10px 14px; transform: rotate(-2deg); font-size: 14px; line-height: 1.5;">
+      <div style="font-weight: 700;">Submission #1043</div>
+      <div style="display: flex; justify-content: space-between;"><span>Accepted</span><span>3 of 3 · 0.016 s</span></div>
+    </div>
+  </div>
+  <div style="flex: 1; background: #ffffff; margin-top: -24px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden;">
+    <div aria-hidden="true" style="display: flex; align-self: stretch; height: 40px; overflow: hidden;">
+      <span style="flex: 0 0 28px; background: #f86f03;"></span><span style="flex: 0 0 28px;"></span><span style="flex: 0 0 28px; background: #f86f03;"></span><span style="flex: 0 0 28px;"></span><span style="flex: 0 0 28px; background: #f86f03;"></span><span style="flex: 0 0 28px;"></span><span style="flex: 0 0 28px; background: #f86f03;"></span><span style="flex: 0 0 28px;"></span><span style="flex: 0 0 28px; background: #f86f03;"></span><span style="flex: 0 0 28px;"></span><span style="flex: 0 0 28px; background: #f86f03;"></span><span style="flex: 0 0 28px;"></span><span style="flex: 0 0 28px; background: #f86f03;"></span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: 24px;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#c45200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2M14 2v2M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></svg>
+      <span class="display" style="font-size: 30px;">Code Cafe</span>
+    </div>
+    <h1 class="display" style="font-size: 54px; text-align: center; margin-top: 22px;">Solve it while<br>it is still hot</h1>
+    <p style="margin: 16px 20px 0; font-size: 16px; line-height: 1.5; text-align: center;">An online judge for C, C++, Python and Java. Pick a problem, write your solution, get a verdict in seconds.</p>
+    <a href="#menu" style="margin: 20px 20px 0; align-self: stretch; height: 52px; display: flex; align-items: center; justify-content: center; background: #f86f03; color: #1a1612; font-size: 17px; font-weight: 500; text-decoration: none;">See today’s menu</a>
+    <span style="flex: 1;"></span>
+    <nav aria-label="On this page" style="display: flex; gap: 20px; padding: 0 16px 18px; font-size: 15px; font-weight: 500;">
+      <a href="#how" style="color: #1a1612;">How a run works</a>
+      <a href="#menu" style="color: #1a1612;">The menu</a>
+      <a href="#signin" style="color: #1a1612;">Sign in</a>
+    </nav>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Logo from "../assets/logo-white.png";
 import { Link } from "react-router-dom";
-import { auth_user } from "../controllers/UserRoutes";
+import { auth_user, logout_user } from "../controllers/UserRoutes";
 
 const Navbar = ({name}) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,12 +18,10 @@ const Navbar = ({name}) => {
             };
             auth_user(obj).then((data) => {
                 if(data.tag){
-                    let user_obj = {
-                        username: data.username
-                    }
-                    setUserName(user_obj.username);
-                    console.log(user_obj.username);
-
+                    setUserName(data.username);
+                } else {
+                    // token revoked or expired
+                    localStorage.removeItem("token");
                 }
             });
         }
@@ -64,9 +62,9 @@ const Navbar = ({name}) => {
                             <Link
                                 to="/signup"
                                 className="text-white hover:text-[#ffd6af]"
-                                onClick={() => {
+                                onClick={async () => {
                                     setLogout(true);
-                                    localStorage.removeItem("token");
+                                    await logout_user();
                                     window.location.reload();
                                 }}
                             >

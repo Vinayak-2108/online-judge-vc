@@ -1,0 +1,13 @@
+[
+  {"model": "home.questionlist", "pk": 1, "fields": {"name": "Sum of Two Numbers", "difficulty": "Easy", "description": "Read two integers a and b, each on its own line or separated by a space, and print a + b."}},
+  {"model": "home.questionlist", "pk": 2, "fields": {"name": "Reverse a String", "difficulty": "Medium", "description": "Read a single line containing a string s (no spaces) and print it reversed."}},
+  {"model": "home.questionlist", "pk": 3, "fields": {"name": "Nth Fibonacci", "difficulty": "Hard", "description": "Read an integer n (0 <= n <= 90) and print the nth Fibonacci number, where F(0) = 0 and F(1) = 1."}},
+  {"model": "home.testcases", "pk": 1, "fields": {"question": 1, "tc_input": "2 3", "expected_output": "5"}},
+  {"model": "home.testcases", "pk": 2, "fields": {"question": 1, "tc_input": "-10\n25", "expected_output": "15"}},
+  {"model": "home.testcases", "pk": 3, "fields": {"question": 1, "tc_input": "1000000000 1000000000", "expected_output": "2000000000"}},
+  {"model": "home.testcases", "pk": 4, "fields": {"question": 2, "tc_input": "hello", "expected_output": "olleh"}},
+  {"model": "home.testcases", "pk": 5, "fields": {"question": 2, "tc_input": "codecafe", "expected_output": "efacedoc"}},
+  {"model": "home.testcases", "pk": 6, "fields": {"question": 3, "tc_input": "0", "expected_output": "0"}},
+  {"model": "home.testcases", "pk": 7, "fields": {"question": 3, "tc_input": "10", "expected_output": "55"}},
+  {"model": "home.testcases", "pk": 8, "fields": {"question": 3, "tc_input": "90", "expected_output": "2880067194370816120"}}
+]

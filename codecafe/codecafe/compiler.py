@@ -1,86 +1,114 @@
-import subprocess
-import os
+"""Code execution through the Judge0 API (sandboxed, runs off our server)."""
 
-def compile_code(file_path,lang):
-    if lang == 'c':
-        compiler = 'gcc'
-    elif lang == 'cpp':
-        compiler = 'g++'
-    elif lang == 'py':
-        return 1
-    else:
-        return 0
-    
-    curr_dir = os.getcwd()
+import base64
+
+import requests
+from django.conf import settings
+
+# Judge0 CE language ids
+LANG_IDS = {
+    'c': 50,     # C (GCC 9.2.0)
+    'cpp': 54,   # C++ (GCC 9.2.0)
+    'java': 62,  # Java (OpenJDK 13.0.1)
+    'py': 71,    # Python (3.8.1)
+}
+
+ACCEPTED = 3
+WRONG_ANSWER = 4
+TIME_LIMIT = 5
+COMPILATION_ERROR = 6
+
+
+class JudgeError(Exception):
+    """Judge0 could not be reached or returned an unusable response."""
+
+
+def _headers():
+    headers = {'Content-Type': 'application/json'}
+    if settings.JUDGE0_KEY:
+        headers['X-RapidAPI-Key'] = settings.JUDGE0_KEY
+        headers['X-RapidAPI-Host'] = settings.JUDGE0_HOST
+    return headers
+
+
+def execute(code, lang, stdin='', expected_output=None):
+    """Run code once and return the Judge0 result dict."""
+    if lang not in LANG_IDS:
+        raise ValueError(f'Unsupported language: {lang}')
+
+    # base64 both ways: Judge0 rejects plain-text results that aren't valid
+    # UTF-8, which GCC compile errors often are
+    payload = {
+        'source_code': _b64encode(code),
+        'language_id': LANG_IDS[lang],
+        'stdin': _b64encode(stdin or ''),
+        'cpu_time_limit': 5,
+    }
+    if expected_output is not None:
+        payload['expected_output'] = _b64encode(expected_output)
+
     try:
-        os.chdir("home\dump")
-        compile_file = subprocess.run([compiler, file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        os.chdir(curr_dir)
-        stderror = compile_file.stderr.decode("utf-8")
-        if stderror == "":
-            return 1
-        else:
-            return 0
-    except:
-        os.chdir(curr_dir)
-        return 0
+        res = requests.post(
+            f'{settings.JUDGE0_URL}/submissions',
+            params={'base64_encoded': 'true', 'wait': 'true'},
+            json=payload,
+            headers=_headers(),
+            timeout=settings.JUDGE0_TIMEOUT,
+        )
+        res.raise_for_status()
+        result = res.json()
+    except (requests.RequestException, ValueError) as e:
+        raise JudgeError(str(e)) from e
 
-        
+    for key in ('stdout', 'stderr', 'compile_output', 'message'):
+        if result.get(key):
+            result[key] = _b64decode(result[key])
+    return result
 
-def exec_code(lang,ip_data):
-    curr_dir = os.getcwd()
+
+def _b64decode(text):
+    raw = base64.b64decode(text)
     try:
-        os.chdir("home\dump")
-        if lang == 'py':
-            result = subprocess.run(['python','temp.py'],input=ip_data.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=5)
-        else:
-            result = subprocess.run(['./a.exe'],input=ip_data.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=5)
-         
-        os.chdir(curr_dir)
-        stdout_output = result.stdout
-        stderr_output = result.stderr
+        return raw.decode('utf-8')
+    except UnicodeDecodeError:
+        # GCC on Judge0 emits cp1252 quotes in its diagnostics
+        return raw.decode('cp1252', errors='replace')
 
-        if result.returncode != 0:
-            raise subprocess.CalledProcessError(result.returncode, cmd=result.args, output=result.stdout, stderr=result.stderr)
 
-        return result.stdout.decode('utf8')
-    
-    except FileNotFoundError as e:
-        print(f"Error: {e.filename} not found.")
-        return "Error: File not found."
-    except PermissionError as e:
-        print(f"Error: Permission denied for {e.filename}.")
-        os.chdir(curr_dir)
-        return "Error: Permission denied."
-    except subprocess.CalledProcessError as e:
-        print(f"Error: Command {e.cmd} returned a non-zero exit code {e.returncode}.")
-        print(f"Standard Output: {e.output}")
-        print(f"Standard Error: {e.stderr}")
-        os.chdir(curr_dir)
-        return "Error: Code execution failed."
-    except subprocess.TimeoutExpired as e:
-        print(f"Error: Code execution timed out. {e}")
-        os.chdir(curr_dir)
-        return "Error: Code execution timed out."
-    except Exception as e:
-        print(f"Error occurred while executing the code: {e}")
-        os.chdir(curr_dir)
-        return "Error occurred while executing the code."
+def _b64encode(text):
+    return base64.b64encode(text.encode('utf-8')).decode('ascii')
 
-def check_tc(tc, lang):
-    flag = 1
-    j = 0
-    idx = 0
-    for i in tc:
-        j+=1
-        result = exec_code(lang,str(i.tc_input).replace(' ','\n'))
-        
-        if result != i.expected_output:
-            flag=0
-            idx=j
-            break
-    
-    if flag == 0:
-        return f'Wrong Answer on tc {idx}'
-    else:
-        return "Accepted"
+
+def run_code(code, lang, stdin=''):
+    """Run against custom input. Returns {'status', 'output', 'error'}."""
+    result = execute(code, lang, stdin)
+    status = result.get('status') or {}
+    error = result.get('compile_output') or result.get('stderr') or ''
+    if status.get('id') not in (ACCEPTED, None) and not error:
+        error = status.get('description', '')
+    return {
+        'status': status.get('description', 'Unknown'),
+        'output': result.get('stdout') or '',
+        'error': error,
+    }
+
+
+def _normalize(text):
+    return '\n'.join(line.rstrip() for line in (text or '').strip().splitlines())
+
+
+def judge(code, lang, testcases):
+    """Run all testcases and return a verdict string."""
+    for idx, tc in enumerate(testcases, start=1):
+        result = execute(code, lang, tc.tc_input)
+        status_id = (result.get('status') or {}).get('id')
+
+        if status_id == COMPILATION_ERROR:
+            return 'Compilation Error'
+        if status_id == TIME_LIMIT:
+            return f'Time Limit Exceeded on tc {idx}'
+        if status_id != ACCEPTED:
+            return f'Runtime Error on tc {idx}'
+        if _normalize(result.get('stdout')) != _normalize(tc.expected_output):
+            return f'Wrong Answer on tc {idx}'
+    return 'Accepted'

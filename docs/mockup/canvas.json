@@ -1,0 +1,22 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-29T16:30:00Z" },
+  "title": "Code Cafe — landing and phone mockup",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 4980, "title": "Landing — Light (theme toggle works)", "expand": "fill", "is_interactive": true },
+    "LandingDark.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 4980, "title": "Landing — Dark (chalkboard)", "expand": "fill", "is_interactive": true },
+    "PhoneLanding.dc.html": { "x": 0, "y": 5400, "w": 390, "h": 844, "title": "Phone — Landing hero (light)" },
+    "PhoneProblems.dc.html": { "x": 470, "y": 5400, "w": 390, "h": 844, "title": "Phone — Problems (light)" },
+    "PhoneWorkspace.dc.html": { "x": 940, "y": 5400, "w": 390, "h": 844, "title": "Phone — Workspace, code tab (dark)" }
+  },
+  "order": ["Main.dc.html", "LandingDark.dc.html", "PhoneLanding.dc.html", "PhoneProblems.dc.html", "PhoneWorkspace.dc.html"],
+  "notes": {
+    "landingTitle": { "x": 0, "y": -300, "text": "Landing page — light and dark", "kind": "title1", "maxW": 2960 },
+    "phoneTitle": { "x": 0, "y": 5100, "text": "Phone", "kind": "title1", "maxW": 1330 },
+    "idea": { "x": 3040, "y": 0, "w": 440, "fill": "orange", "text": "The idea: the café's menu and its printed tickets become the page. Problems are menu items ranked by roast (Easy = Light, Medium = Medium, Hard = Dark), and every submission prints a slip with its verdict.\n\nLight theme = the printed menu. Dark theme = the chalkboard.\n\nDirection dealt by the taste skill: page-is-the-object (seed 665408074), hero redrawn once to 'Striped card beside the room'. App screens (Problems, Workspace, Submissions, Sign in) are in the Figma file." },
+    "data": { "x": 3040, "y": 700, "w": 440, "fill": "gray", "text": "Sample content to confirm before launch: 9 of the 12 problem names and their acceptance rates, the user riya_s, submission numbers, run times and times of day.\n\nThe hero Run and Submit are simulated here (Run adds the two numbers you type). In the product they call Judge0." }
+  },
+  "designSystems": []
+}

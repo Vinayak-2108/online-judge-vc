@@ -33,10 +33,10 @@ const Signup = () => {
             if (data.tag) {
                 localStorage.setItem("token", data.token);
                 navigate("/");
+                window.location.reload();
             } else {
                 alert("Invalid Login");
             }
-            window.location.reload();
         });
     };
     const handleSignUpSubmit = async (e) => {
@@ -48,8 +48,11 @@ const Signup = () => {
         };
         // console.log(obj);
         register_user(obj).then((data) => {
-            alert(data.message);
-            console.log(data);
+            if (data.token) {
+                alert(data.message);
+            } else {
+                alert(Object.values(data).flat().join("\n"));
+            }
         });
         setName("");
         setEmail("");
