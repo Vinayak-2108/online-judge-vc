@@ -27,7 +27,7 @@ class QuestionTests(APITestCase):
     def test_list_and_detail(self):
         res = self.client.get('/api/questions/')
         self.assertEqual(res.status_code, 200)
-        self.assertEqual([q['id'] for q in res.data], [1, 2, 3])
+        self.assertEqual([q['id'] for q in res.data], [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13])
 
         res = self.client.get('/api/questions/2/')
         self.assertEqual(res.data['name'], 'Reverse a String')
@@ -276,11 +276,11 @@ class ProblemStatsTests(APITestCase):
             'submissions': 3,
             'solved': 1,
             'attempted': 1,
-            'total': 3,
+            'total': 12,
             'by_roast': {
-                'light': {'solved': 1, 'attempted': 0, 'total': 1},
-                'medium': {'solved': 0, 'attempted': 1, 'total': 1},
-                'dark': {'solved': 0, 'attempted': 0, 'total': 1},
+                'light': {'solved': 1, 'attempted': 0, 'total': 4},
+                'medium': {'solved': 0, 'attempted': 1, 'total': 5},
+                'dark': {'solved': 0, 'attempted': 0, 'total': 3},
             },
         })
 
