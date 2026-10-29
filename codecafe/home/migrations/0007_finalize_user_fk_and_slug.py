@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
         migrations.RenameField('submissions', 'user_fk', 'user'),
         migrations.AlterField(
             'submissions', 'user',
-            models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+            models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.SET_NULL,
                               related_name='submissions', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField('questionlist', 'slug', models.SlugField(max_length=120, unique=True)),

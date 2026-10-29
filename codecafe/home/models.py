@@ -34,7 +34,12 @@ class TestCases(models.Model):
 
 
 class Submissions(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submissions')
+    # Null when the account was deleted (or never matched during the username -> FK migration);
+    # `legacy_username` then keeps the name to display.
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='submissions',
+    )
+    legacy_username = models.CharField(max_length=100, blank=True, default='')
     # The problem name as it was when submitted.
     problem = models.CharField(max_length=100)
     question = models.ForeignKey(
@@ -44,6 +49,7 @@ class Submissions(models.Model):
     submission_time = models.DateTimeField(auto_now_add=True)
     language = models.CharField(max_length=30)
     code = models.TextField(blank=True, default='')
-    runtime_ms = models.PositiveIntegerField(default=0)
-    passed = models.PositiveIntegerField(default=0)
-    total = models.PositiveIntegerField(default=0)
+    # Null = unknown (submissions from before these were recorded).
+    runtime_ms = models.PositiveIntegerField(null=True, blank=True)
+    passed = models.PositiveIntegerField(null=True, blank=True)
+    total = models.PositiveIntegerField(null=True, blank=True)

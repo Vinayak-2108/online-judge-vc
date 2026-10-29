@@ -94,6 +94,12 @@ class JudgeTests(APITestCase):
             {'id': sub.pk, 'verdict': 'Accepted', 'passed': 3, 'total': 3, 'runtime_ms': 10},
         )
 
+    def test_legacy_submission_serializes_old_name_and_null_runtime(self):
+        Submissions.objects.create(user=None, legacy_username='ghost', problem='A', verdict='Accepted', language='py')
+        row = self.client.get('/api/submissions/').data[0]
+        self.assertEqual(row['user'], 'ghost')
+        self.assertEqual((row['runtime_ms'], row['passed'], row['total']), (None, None, None))
+
     @mock.patch('codecafe.compiler.execute')
     def test_submit_wrong_answer_reports_testcase(self, execute):
         outputs = iter(['5', '16'])
@@ -219,6 +225,11 @@ class ProblemStatsTests(APITestCase):
         self.assertEqual([by_id[i]['status'] for i in (1, 2, 3)], ['solved', 'attempted', 'new'])
         self.assertEqual(by_id[1]['best_runtime_ms'], 25)
         self.assertIsNone(by_id[2]['best_runtime_ms'])
+        # an accepted legacy submission has an unknown runtime: null, not 0
+        Submissions.objects.create(user=self.alice, problem='x', question_id=3, verdict='Accepted', language='py')
+        by_id = {q['id']: q for q in self.client.get('/api/questions/').data}
+        self.assertEqual(by_id[3]['status'], 'solved')
+        self.assertIsNone(by_id[3]['best_runtime_ms'])
         self.assertEqual(by_id[3]['acceptance_rate'], 100.0)
 
     def test_questions_list_with_bad_token_is_rejected(self):
@@ -268,10 +279,13 @@ class MigrationBackfillTests(TransactionTestCase):
         Question = old.get_model('home', 'QuestionList')
         Sub = old.get_model('home', 'Submissions')
         old.get_model('auth', 'User').objects.create(username='alice')
+        old.get_model('auth', 'User').objects.create(username='Bob')
+        old.get_model('auth', 'User').objects.create(username='carol')
+        old.get_model('auth', 'User').objects.create(username='CAROL')
         Question.objects.create(name='Sum of Two Numbers', difficulty='Easy', description='d')
         Question.objects.create(name='Sum of Two Numbers', difficulty='Hard', description='d')
-        Sub.objects.create(user='alice', problem='Sum of Two Numbers', verdict='Accepted', language='py')
-        Sub.objects.create(user='ghost', problem='Sum of Two Numbers', verdict='Accepted', language='py')
+        for name in ['alice', 'Alice', 'bob', 'ghost', 'Carol']:
+            Sub.objects.create(user=name, problem='Sum of Two Numbers', verdict='Accepted', language='py')
 
         executor = MigrationExecutor(connection)
         executor.migrate(self.migrate_to)
@@ -282,6 +296,12 @@ class MigrationBackfillTests(TransactionTestCase):
             list(Question.objects.order_by('id').values_list('slug', 'difficulty')),
             [('sum-of-two-numbers', 'light'), ('sum-of-two-numbers-2', 'dark')],
         )
-        sub = Sub.objects.get()  # the "ghost" row has no user to attach to and is dropped
-        self.assertEqual(sub.user.username, 'alice')
-        self.assertEqual(sub.question.slug, 'sum-of-two-numbers')
+        self.assertEqual(Sub.objects.count(), 5)  # nothing is dropped
+        by_pk = list(Sub.objects.order_by('id').select_related('user'))
+        # alice (exact), Alice (case-insensitive), bob -> Bob (case-insensitive)
+        self.assertEqual([s.user.username if s.user else None for s in by_pk], ['alice', 'alice', 'Bob', None, None])
+        # no account, and an ambiguous case-insensitive match: kept under the old name
+        self.assertEqual([s.legacy_username for s in by_pk], ['', '', '', 'ghost', 'Carol'])
+        self.assertEqual(by_pk[0].question.slug, 'sum-of-two-numbers')
+        # unknown, not zero
+        self.assertEqual([(s.runtime_ms, s.passed, s.total) for s in by_pk][0], (None, None, None))

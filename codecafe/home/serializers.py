@@ -53,8 +53,11 @@ class TestCasesSerializer(serializers.ModelSerializer):
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(source='user.username', read_only=True)
+    user = serializers.SerializerMethodField()
     problem_slug = serializers.CharField(source='question.slug', read_only=True, default=None)
+
+    def get_user(self, obj):
+        return obj.user.username if obj.user_id else obj.legacy_username
 
     class Meta:
         model = Submissions
