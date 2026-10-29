@@ -4,9 +4,9 @@ import { MemoryRouter } from "react-router";
 import { AppRoutes } from "../utils/router";
 
 const questions = [
-    { id: 1, name: "Sum of Two Numbers", difficulty: "Easy", description: "Add." },
-    { id: 2, name: "Nth Fibonacci", difficulty: "Medium", description: "Fib." },
-    { id: 3, name: "Median of Arrays", difficulty: "Hard", description: "Median." },
+    { id: 1, name: "Sum of Two Numbers", difficulty: "light", description: "Add." },
+    { id: 2, name: "Nth Fibonacci", difficulty: "medium", description: "Fib." },
+    { id: 3, name: "Median of Arrays", difficulty: "dark", description: "Median." },
 ];
 
 const submissions = [
@@ -17,6 +17,11 @@ const submissions = [
         verdict: "Accepted",
         submission_time: "2026-01-01T10:00:00Z",
         language: "cpp",
+        problem_slug: "sum-of-two-numbers",
+        question: 1,
+        passed: 3,
+        total: 3,
+        runtime_ms: 12,
     },
 ];
 
