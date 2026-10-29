@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link, useParams } from "react-router";
 import {
@@ -6,45 +6,40 @@ import {
     run_compiler,
     submit_compiler,
 } from "../controllers/QuestionRoutes";
+import type { Question } from "../types";
 import ResultModal from "../components/ResultModal";
 import { motion } from "motion/react";
 import { auth_user } from "../controllers/UserRoutes";
 import CodeMirror from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
-import { java } from "@codemirror/lang-java";
-import { python } from "@codemirror/lang-python";
 
 const Problem = () => {
-    const [problem, setProblem] = useState([]);
+    const [problem, setProblem] = useState<Question[]>([]);
     const [codeLang, setCodeLang] = useState("cpp");
-    var [code, setCode] = useState("");
+    const [code, setCode] = useState("");
     const [outputCode, setOutputCode] = useState("");
     const [userInput, setUserInput] = useState("");
-    const [stateVerdict, setStateVerdict] = useState(false);
-    const [outputVerdict, setOutputVerdict] = useState(false);
+    const [outputVerdict, setOutputVerdict] = useState<string | boolean>(false);
     const [openModal, setOpenModal] = useState(false);
 
     const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
     const [userName, setUserName] = useState("");
 
     const { id } = useParams();
-    var valext = [cpp()];
-    const probIndex = parseInt(id);
+    const valext = [cpp()];
+    const probIndex = parseInt(id ?? "", 10);
 
     useEffect(() => {
         if (localStorage.getItem("token")) {
             console.log("token exists");
-            let obj = {
-                token: localStorage.getItem("token"),
-            };
-            auth_user(obj).then((data) => {
+            auth_user().then((data) => {
                 if (data.tag) {
                     console.log("HI");
                     setIsUserLoggedIn(true);
-                    let user_obj = {
+                    const user_obj = {
                         username: data.username,
                     };
-                    setUserName(user_obj.username);
+                    setUserName(user_obj.username ?? "");
                     console.log(user_obj.username);
                 } else {
                     setIsUserLoggedIn(false);
@@ -56,8 +51,6 @@ const Problem = () => {
             // console.log(data);
             setProblem(data);
         });
-        setStateVerdict(false);
-        setOutputCode(false);
     }, []);
 
     const handleRun = () => {
@@ -87,7 +80,6 @@ const Problem = () => {
         // console.log(payload);
         try {
             submit_compiler(payload).then((data) => {
-                setStateVerdict(true);
                 setOutputVerdict(data.verdict || data.error);
                 setOpenModal(true);
                 scrollToTop();
@@ -152,11 +144,6 @@ const Problem = () => {
                                         </div>
                                         <CodeMirror
                                             value={code}
-                                            options={{
-                                                theme: "monokai",
-                                                keyMap: "sublime",
-                                                mode: "jsx",
-                                            }}
                                             className="m-3 text-lg rounded-lg"
                                             onChange={(value) => setCode(value)}
                                             theme="dark"

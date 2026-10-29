@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Logo from "../assets/logo-white.png";
 import { Link } from "react-router";
 import { auth_user, logout_user } from "../controllers/UserRoutes";
 
-const Navbar = ({name}) => {
+const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [userName, setUserName] = useState("");
     const [logout, setLogout] = useState(false);
@@ -13,12 +13,9 @@ const Navbar = ({name}) => {
 
     useEffect(() => {
         if(localStorage.getItem("token")){
-            let obj = {
-                token: localStorage.getItem("token"),
-            };
-            auth_user(obj).then((data) => {
+            auth_user().then((data) => {
                 if(data.tag){
-                    setUserName(data.username);
+                    setUserName(data.username ?? "");
                 } else {
                     // token revoked or expired
                     localStorage.removeItem("token");

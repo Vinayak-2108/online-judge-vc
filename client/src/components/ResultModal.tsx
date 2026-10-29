@@ -1,7 +1,7 @@
-import { motion } from "motion/react";
+import { motion, type Variants } from "motion/react";
 import Backdrop from "./Backdrop";
 
-const dropIn = {
+const dropIn: Variants = {
     hidden: {
         y: "-100vh",
         opacity: 0,
@@ -22,7 +22,13 @@ const dropIn = {
     },
 };
 
-const ResultModal = ({ open, onClose, result }) => {
+interface ResultModalProps {
+    open: boolean;
+    onClose: () => void;
+    result: string | boolean;
+}
+
+const ResultModal = ({ open, onClose, result }: ResultModalProps) => {
     if (!open) return null;
     console.log(result);
     return (

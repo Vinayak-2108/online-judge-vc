@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { get_all_submissions } from "../controllers/SubmissionRoutes";
+import type { Submission } from "../types";
 
 const Submissions = () => {
-    const [submissions, setSubmissions] = useState([]);
+    const [submissions, setSubmissions] = useState<Submission[]>([]);
 
     useEffect(() => {
         get_all_submissions().then((data) => {
@@ -12,7 +13,7 @@ const Submissions = () => {
             console.log(data);
         });
     }, []);
-    const convertToRealTime = (timeString) => {
+    const convertToRealTime = (timeString: string) => {
         const dateObj = new Date(timeString);
         const realTime = dateObj.toLocaleTimeString([], {
             hour: "2-digit",

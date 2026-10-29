@@ -1,3 +1,5 @@
+import type { Question } from "../types";
+
 const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`
 
 const authHeaders = () => ({
@@ -5,18 +7,18 @@ const authHeaders = () => ({
     "Authorization": `Token ${localStorage.getItem('token')}`,
 });
 
-export const get_all_questions = async() => {
+export const get_all_questions = async(): Promise<Question[]> => {
     const res = await fetch(`${base}/questions/`);
     const ans = await res.json();
     return ans;
 }
-export const get_question = async(id) => {
+export const get_question = async(id: number | string) => {
     const res = await fetch(`${base}/questions/${id}/`);
     const ans = await res.json();
     return ans;
 }
 
-export const run_compiler = async(obj) => {
+export const run_compiler = async(obj: Record<string, unknown>) => {
     const res = await fetch(`${base}/questions/run`, {
         method: 'POST',
         body: JSON.stringify(obj),
@@ -26,7 +28,7 @@ export const run_compiler = async(obj) => {
     return ans;
 }
 
-export const submit_compiler = async(obj) => {
+export const submit_compiler = async(obj: Record<string, unknown>) => {
     const res = await fetch(`${base}/questions/submit`, {
         method: 'POST',
         body: JSON.stringify(obj),

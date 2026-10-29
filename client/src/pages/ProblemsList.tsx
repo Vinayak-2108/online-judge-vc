@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router";
 import { get_all_questions } from "../controllers/QuestionRoutes";
+import type { Question } from "../types";
 const ProblemList = () => {
-    const [problem, setProblem] = useState([]);
+    const [problem, setProblem] = useState<Question[]>([]);
 
     useEffect(() => {
         get_all_questions().then((data) => {

@@ -1,6 +1,8 @@
+import type { AuthResponse } from "../types";
+
 const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/accounts`;
 
-export const register_user = async(obj) => {
+export const register_user = async(obj: Record<string, unknown>) => {
     const res = await fetch(`${base}/signup`, {
         method: 'POST',
         body: JSON.stringify(obj),
@@ -11,7 +13,7 @@ export const register_user = async(obj) => {
     const ans = await res.json();
     return ans;
 }
-export const login_user = async(obj) => {
+export const login_user = async(obj: Record<string, unknown>) => {
     const res = await fetch(`${base}/login`, {
         method: 'POST',
         body: JSON.stringify(obj),
@@ -22,7 +24,7 @@ export const login_user = async(obj) => {
     const ans = await res.json();
     return ans;
 }
-export const auth_user = async() => {
+export const auth_user = async(): Promise<AuthResponse> => {
     const token = localStorage.getItem('token');
     const res = await fetch(`${base}/test_token`, {
         method: 'POST',

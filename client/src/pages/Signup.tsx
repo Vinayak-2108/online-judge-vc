@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, type SyntheticEvent } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import Navbar from "../components/Navbar";
 import { register_user, login_user } from "../controllers/UserRoutes";
 import "../styles/signup.css";
 import coffeeCup from "../assets/coffee-cup.png";
-import signupImg from "../assets/signup-img.png";
 
 const Signup = () => {
     const navigate = useNavigate();
-    const [signup, setSignup] = useState(true);
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [password, setPassword] = useState("");
@@ -23,9 +21,9 @@ const Signup = () => {
     const handleSignInClick = () => {
         setIsSignUpMode(false);
     };
-    const handleLogInSubmit = async (e) => {
+    const handleLogInSubmit = async (e: SyntheticEvent) => {
         e.preventDefault();
-        let obj = {
+        const obj = {
             username: name,
             password: password,
         };
@@ -39,9 +37,9 @@ const Signup = () => {
             }
         });
     };
-    const handleSignUpSubmit = async (e) => {
+    const handleSignUpSubmit = async (e: SyntheticEvent) => {
         e.preventDefault();
-        let obj = {
+        const obj = {
             username: name,
             email: email,
             password: password,

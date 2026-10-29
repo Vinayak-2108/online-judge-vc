@@ -1,6 +1,12 @@
+import type { MouseEventHandler, ReactNode } from "react";
 import { motion } from "motion/react";
 import "../styles/backdrop.css";
-const Backdrop = ({ children, onClick }) => {
+interface BackdropProps {
+  children?: ReactNode;
+  onClick?: MouseEventHandler<HTMLDivElement>;
+}
+
+const Backdrop = ({ children, onClick }: BackdropProps) => {
  
   return (
     <motion.div
