@@ -123,7 +123,7 @@ const Problem = () => {
                                         <h3 className="text-2xl m-3 uppercase font-semibold text-[#C56E33]">
                                             Difficulty:{" "}
                                             <span className="text-[#E6B17E] normal-case font-medium">
-                                                {temp.difficulty}
+                                                {temp.difficulty} roast
                                             </span>
                                         </h3>
                                     </div>

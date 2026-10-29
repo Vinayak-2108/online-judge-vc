@@ -8,7 +8,11 @@ const authHeaders = () => ({
 });
 
 export const get_all_questions = async(): Promise<Question[]> => {
-    const res = await fetch(`${base}/questions/`);
+    // The token is optional: with it each problem carries the caller's status.
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${base}/questions/`, {
+        headers: token ? { "Authorization": `Token ${token}` } : {},
+    });
     const ans = await res.json();
     return ans;
 }

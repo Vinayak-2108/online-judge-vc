@@ -2,7 +2,13 @@ import { Fragment, useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router";
 import { get_all_questions } from "../controllers/QuestionRoutes";
-import type { Question } from "../types";
+import type { Question, Roast } from "../types";
+
+const ROAST_LABEL: Record<Roast, string> = {
+    light: "Light roast",
+    medium: "Medium roast",
+    dark: "Dark roast",
+};
 const ProblemList = () => {
     const [problem, setProblem] = useState<Question[]>([]);
 
@@ -55,24 +61,17 @@ const ProblemList = () => {
                                                             {prob.name}
                                                         </Link>
                                                     </td>
-                                                    {prob.difficulty ===
-                                                        "Easy" && (
-                                                        <td className="px-6 py-4 text-green-600 whitespace-nowrap">
-                                                            {prob.difficulty}
-                                                        </td>
-                                                    )}
-                                                    {prob.difficulty ===
-                                                        "Medium" && (
-                                                        <td className="px-6 py-4 text-yellow-600 whitespace-nowrap">
-                                                            {prob.difficulty}
-                                                        </td>
-                                                    )}
-                                                    {prob.difficulty ===
-                                                        "Hard" && (
-                                                        <td className="px-6 py-4 text-red-600 whitespace-nowrap">
-                                                            {prob.difficulty}
-                                                        </td>
-                                                    )}
+                                                    <td
+                                                        className={`px-6 py-4 whitespace-nowrap ${
+                                                            prob.difficulty === "light"
+                                                                ? "text-green-600"
+                                                                : prob.difficulty === "medium"
+                                                                  ? "text-yellow-600"
+                                                                  : "text-red-600"
+                                                        }`}
+                                                    >
+                                                        {ROAST_LABEL[prob.difficulty]}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </Fragment>

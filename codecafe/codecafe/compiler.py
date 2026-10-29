@@ -90,6 +90,7 @@ def run_code(code, lang, stdin=''):
         'status': status.get('description', 'Unknown'),
         'output': result.get('stdout') or '',
         'error': error,
+        'runtime_ms': _runtime_ms(result),
     }
 
 
@@ -97,18 +98,36 @@ def _normalize(text):
     return '\n'.join(line.rstrip() for line in (text or '').strip().splitlines())
 
 
+def _runtime_ms(result):
+    """Judge0 reports `time` as seconds in a string, e.g. "0.012"."""
+    try:
+        return int(round(float(result.get('time') or 0) * 1000))
+    except (TypeError, ValueError):
+        return 0
+
+
 def judge(code, lang, testcases):
-    """Run all testcases and return a verdict string."""
+    """Run the testcases in order and stop at the first failure.
+
+    Returns (verdict, passed, total, runtime_ms); runtime_ms is the slowest
+    test case that ran.
+    """
+    testcases = list(testcases)
+    total = len(testcases)
+    passed = 0
+    runtime_ms = 0
     for idx, tc in enumerate(testcases, start=1):
         result = execute(code, lang, tc.tc_input)
+        runtime_ms = max(runtime_ms, _runtime_ms(result))
         status_id = (result.get('status') or {}).get('id')
 
         if status_id == COMPILATION_ERROR:
-            return 'Compilation Error'
+            return 'Compilation Error', passed, total, runtime_ms
         if status_id == TIME_LIMIT:
-            return f'Time Limit Exceeded on tc {idx}'
+            return f'Time Limit Exceeded on tc {idx}', passed, total, runtime_ms
         if status_id != ACCEPTED:
-            return f'Runtime Error on tc {idx}'
+            return f'Runtime Error on tc {idx}', passed, total, runtime_ms
         if _normalize(result.get('stdout')) != _normalize(tc.expected_output):
-            return f'Wrong Answer on tc {idx}'
-    return 'Accepted'
+            return f'Wrong Answer on tc {idx}', passed, total, runtime_ms
+        passed += 1
+    return 'Accepted', passed, total, runtime_ms
