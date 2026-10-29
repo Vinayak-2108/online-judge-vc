@@ -1,4 +1,4 @@
-const base = `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api`
+const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`
 
 const authHeaders = () => ({
     "Content-Type" : "application/json",

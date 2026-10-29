@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from "../components/Navbar"
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 
 export default function Home(){
@@ -13,7 +13,7 @@ export default function Home(){
             <h1 className="text-[5rem] font-bold text-[#C56E33]">For you to solve!</h1>
         </div>
         <div className="m-3 p-5 text-center">
-            <button className="text-[2rem] font-bold text-white p-3 hover:bg-[#ec8626] bg-[#C56E33]  rounded" onClick={() => navigate('/problems')}>Start Brewing</button>
+            <button className="text-[2rem] font-bold text-white p-3 hover:bg-[#ec8626] bg-[#C56E33]  rounded-sm" onClick={() => navigate('/problems')}>Start Brewing</button>
         </div>
 
    

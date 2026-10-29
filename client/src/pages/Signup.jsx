@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useNavigate } from "react-router";
+import { motion } from "motion/react";
 import Navbar from "../components/Navbar";
 import { register_user, login_user } from "../controllers/UserRoutes";
 import "../styles/signup.css";

@@ -28,7 +28,7 @@ const Submissions = () => {
                 <div className="flex flex-col mt-6">
                     <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                         <div className="py-2 align-middle inline-block">
-                            <div className="shadow overflow-hidden sm:rounded-lg">
+                            <div className="shadow-sm overflow-hidden sm:rounded-lg">
                                 <table className="min-w-full text-xl text-gold">
                                     <thead className="bg-[#e2e2e2] text-xl uppercase border-b-2 border-gray-500 font-medium">
                                         <tr>

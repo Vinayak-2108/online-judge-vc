@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Logo from "../assets/logo-white.png";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { auth_user, logout_user } from "../controllers/UserRoutes";
 
 const Navbar = ({name}) => {
@@ -88,7 +88,7 @@ const Navbar = ({name}) => {
             <div className="md:hidden flex flex-col p-2">
                 <div className="">
                     <button
-                        className="text-gray-800 focus:outline-none"
+                        className="text-gray-800 focus:outline-hidden"
                         onClick={toggleMenu}
                     >
                         <svg

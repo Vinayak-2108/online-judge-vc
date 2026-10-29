@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import {
     get_all_questions,
     run_compiler,
     submit_compiler,
 } from "../controllers/QuestionRoutes";
 import ResultModal from "../components/ResultModal";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { auth_user } from "../controllers/UserRoutes";
 import CodeMirror from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
@@ -113,7 +113,7 @@ const Problem = () => {
                         .map((temp) => (
                             <>
                                 <div className="grid grid-rows-2  md:grid-cols-2">
-                                    <div className="bg-[#e2e2e2] rounded m-3 p-2">
+                                    <div className="bg-[#e2e2e2] rounded-sm m-3 p-2">
                                         <h1 className="text-3xl m-3 uppercase font-semibold text-[#C56E33]">
                                             Problem:{" "}
                                             <span className="text-[#E6B17E] capitalize">
@@ -138,7 +138,7 @@ const Problem = () => {
                                     <div>
                                         <div className="flex flex-row">
                                             <select
-                                                className="text-xl w-[40%] p-2 bg-[#e2e2e2] outline-none rounded-lg m-3"
+                                                className="text-xl w-[40%] p-2 bg-[#e2e2e2] outline-hidden rounded-lg m-3"
                                                 value={codeLang}
                                                 onChange={(e) => {
                                                     setCodeLang(e.target.value);
@@ -169,7 +169,7 @@ const Problem = () => {
                                         <div>
                                             <textarea
                                                 value={userInput}
-                                                className="bg-[#e2e2e2] m-3 p-2 outline-none text-xl rounded-lg"
+                                                className="bg-[#e2e2e2] m-3 p-2 outline-hidden text-xl rounded-lg"
                                                 onChange={(e) =>
                                                     setUserInput(e.target.value)
                                                 }

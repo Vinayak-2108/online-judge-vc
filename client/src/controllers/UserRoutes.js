@@ -1,4 +1,4 @@
-const base = `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/accounts`;
+const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/accounts`;
 
 export const register_user = async(obj) => {
     const res = await fetch(`${base}/signup`, {
