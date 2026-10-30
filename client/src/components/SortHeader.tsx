@@ -10,12 +10,14 @@ interface Props {
     onSort: () => void;
     align?: "left" | "right";
     className?: string;
+    /** Show the direction arrow (false at rest, on the default sort). */
+    arrow?: boolean;
 }
 
 const HEAD = "h-10 px-1.5 text-[13px] font-normal text-muted-foreground";
 
 /** A plain column header that sorts on click; a small arrow appears only on the sorted column. */
-const SortHeader = ({ label, active, dir, onSort, align = "left", className = "" }: Props) => (
+const SortHeader = ({ label, active, dir, onSort, align = "left", className = "", arrow = true }: Props) => (
     <TableHead
         aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
         className={`${HEAD} ${align === "right" ? "text-right" : "text-left"} ${className}`}
@@ -27,6 +29,7 @@ const SortHeader = ({ label, active, dir, onSort, align = "left", className = ""
         >
             {label}
             {active &&
+                arrow &&
                 (dir === "asc" ? <ArrowUpIcon className="size-3" aria-hidden /> : <ArrowDownIcon className="size-3" aria-hidden />)}
         </button>
     </TableHead>

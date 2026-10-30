@@ -8,8 +8,8 @@ import Wordmark from "./Wordmark";
 import { useAuth } from "../lib/auth";
 
 const NAV = [
-    { to: "/problems", label: "Problems", icon: ListIcon, stroke: 2.75 },
-    { to: "/submissions", label: "Submissions", icon: NotebookTextIcon, stroke: 2.25 },
+    { to: "/problems", label: "Problems", icon: ListIcon, stroke: 3 },
+    { to: "/submissions", label: "Submissions", icon: NotebookTextIcon, stroke: 2.5 },
 ];
 
 const navClass = ({ isActive }: { isActive: boolean }) =>

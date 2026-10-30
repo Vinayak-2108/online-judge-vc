@@ -128,7 +128,7 @@ const ProblemSearch = ({ variant }: Props) => {
                     setOpen(true);
                 }}
                 onKeyDown={onKeyDown}
-                className="h-[30px] w-full rounded-control border border-border bg-sheet pr-14 pl-9 text-[14px] text-foreground outline-none placeholder:text-muted-ink focus-visible:ring-2 focus-visible:ring-ring md:h-[30px]"
+                className="h-[30px] w-full rounded-control border border-border bg-sheet pr-14 pl-9 text-[15px] text-foreground outline-none placeholder:text-muted-ink focus-visible:ring-2 focus-visible:ring-ring md:h-[30px]"
             />
             {variant === "bar" && !text && !focused && (
                 <kbd className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded-[4px] bg-raised px-1.5 py-0.5 font-sans text-[12px] text-muted-ink">

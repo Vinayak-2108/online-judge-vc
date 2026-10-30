@@ -25,7 +25,7 @@ const StatusMark = ({ status, phone = false }: { status: ProblemStatus; phone?: 
     }
     const Icon = status === "solved" ? CircleCheckIcon : status === "attempted" ? CircleDotIcon : CircleIcon;
     const color = status === "solved" ? "text-positive" : status === "attempted" ? "text-muted-ink" : "text-faint";
-    return <Icon role="img" aria-label={LABEL[status]} className={`size-[17px] shrink-0 ${color}`} strokeWidth={2} />;
+    return <Icon role="img" aria-label={LABEL[status]} className={`size-[17px] shrink-0 ${color}`} strokeWidth={status === "solved" ? 2.5 : 2} />;
 };
 
 export default StatusMark;

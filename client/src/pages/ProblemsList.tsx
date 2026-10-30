@@ -185,6 +185,7 @@ const ProblemsList = () => {
         active: sort.key === key,
         dir: sort.dir,
         onSort: () => setSort((s) => nextSort(s, key, natural)),
+        arrow: !(sort.key === "acceptance" && sort.dir === "desc"),
     });
 
     const randomProblem = () => {
