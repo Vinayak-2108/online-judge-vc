@@ -17,7 +17,7 @@ describe("sign in", () => {
         const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
         mockApi();
         renderAt("/signin");
-        await user.click(screen.getByRole("button", { name: "Sign in" }));
+        await user.click(await screen.findByRole("button", { name: "Sign in" }));
         expect(screen.getByText("Enter a username.")).toBeInTheDocument();
         expect(screen.getByText("Enter your password.")).toBeInTheDocument();
         expect(screen.getByLabelText("Username")).toHaveAttribute("aria-invalid", "true");

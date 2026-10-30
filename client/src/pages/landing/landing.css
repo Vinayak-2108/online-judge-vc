@@ -1,0 +1,245 @@
+/* The landing page: its own tokens on top of the app's, and the layout rules from the mockup. */
+.landing {
+    --field: #1a1612;
+    --on-field: #ffffff;
+    --card: #ffffff;
+    --code: #fbfaf8;
+    --kw: #c45200;
+    --paper: #ffffff;
+    --paper-ink: #1a1612;
+    --roast-light-ink: #1a1612;
+    --roast-medium-ink: #ffffff;
+    --roast-dark-ink: #ffffff;
+    --on-accent: #1a1612;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    background: var(--field);
+    color: var(--text);
+}
+
+:root[data-theme="dark"] .landing {
+    --field: #0d0d0d;
+    --on-field: #f5f3ef;
+    --card: #1e1e1e;
+    --code: #0f0f0f;
+    --kw: #ff8a2a;
+    --paper: #ece8e1;
+    --roast-light-ink: #141414;
+    --roast-medium-ink: #141414;
+    --roast-dark-ink: #ffffff;
+    --on-accent: #141414;
+}
+
+.landing a {
+    color: var(--brand);
+}
+.landing a:hover {
+    color: var(--text);
+}
+.landing :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
+}
+
+/* Display type: Archivo at its narrowest width. */
+.landing .display {
+    font-family: var(--font-sans);
+    font-stretch: 62%;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.landing .num {
+    font-variant-numeric: tabular-nums;
+}
+
+.landing .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 0;
+    border: 1px solid transparent;
+    font: 500 15px/1 var(--font-sans);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.16s ease, background-color 0.16s ease;
+}
+.landing .btn:hover {
+    transform: translateY(-1px);
+}
+.landing .btn:active {
+    transform: translateY(1px);
+}
+.landing .btn-accent {
+    background: var(--brand-fill);
+    color: var(--on-accent);
+    height: 52px;
+    padding: 0 28px;
+    font-size: 17px;
+}
+.landing a.btn-accent,
+.landing a.btn-accent:hover {
+    color: var(--on-accent);
+}
+.landing .btn-primary {
+    background: var(--primary);
+    color: var(--primary-ink);
+}
+.landing a.btn-primary,
+.landing a.btn-primary:hover {
+    color: var(--primary-ink);
+}
+.landing .btn-secondary {
+    background: var(--sheet);
+    color: var(--text);
+    border-color: var(--control);
+}
+.landing .ui .btn {
+    border-radius: 6px;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 14px;
+}
+
+.landing .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+    min-height: 900px;
+    box-sizing: border-box;
+}
+.landing .how-row {
+    display: flex;
+    gap: 32px;
+    padding-top: 28px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+}
+.landing .how-row::-webkit-scrollbar {
+    display: none;
+}
+.landing .how-col {
+    flex: none;
+    width: 280px;
+    scroll-snap-align: start;
+}
+.landing .deck .card {
+    transition: flex-basis 0.36s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.landing .deck .card:hover .solve {
+    text-decoration: underline;
+}
+.landing .cta-card {
+    position: absolute;
+    right: 6%;
+    bottom: -60px;
+    width: min(44vw, 640px);
+    aspect-ratio: 7 / 5;
+    transform: rotate(2deg);
+}
+.landing .foot-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+}
+.landing .slips {
+    display: flex;
+}
+
+@media (max-width: 860px) {
+    .landing .hero {
+        grid-template-columns: 1fr;
+        min-height: 0;
+        padding: 12px;
+    }
+    /* phones: the live editor comes first, the menu card overlaps its foot */
+    .landing .room {
+        order: -1;
+        padding: 20px 16px 44px !important;
+    }
+    .landing .hero-card {
+        margin-top: -24px;
+        position: relative;
+    }
+    .landing .hero-stripes {
+        height: 40px !important;
+    }
+    .landing .room-title {
+        display: none !important;
+    }
+    .landing .how {
+        padding: 96px 16px !important;
+    }
+    .landing .how-col {
+        width: 72vw;
+    }
+    .landing .how-nav {
+        display: none !important;
+    }
+    .landing .menu {
+        padding: 96px 16px !important;
+    }
+    .landing .deck {
+        flex-direction: column !important;
+        height: auto !important;
+        gap: 12px;
+    }
+    .landing .deck .card {
+        flex: none !important;
+        width: 100% !important;
+    }
+    .landing .deck .card .inner {
+        width: auto !important;
+    }
+    .landing .showcase {
+        height: auto !important;
+        min-height: 100svh;
+    }
+    .landing .scrim {
+        left: 16px !important;
+        right: 16px !important;
+        width: auto !important;
+        top: 80px !important;
+    }
+    .landing .slips {
+        overflow-x: auto;
+    }
+    .landing .slips .slip {
+        flex: 0 0 30vw !important;
+    }
+    .landing .cta {
+        padding: 96px 16px 0 !important;
+        min-height: 0 !important;
+    }
+    .landing .cta-card {
+        position: relative;
+        right: auto;
+        bottom: -40px;
+        width: 90%;
+        margin: 48px auto 0;
+        transform: rotate(1deg);
+    }
+    .landing .cta-copy {
+        position: static !important;
+        max-width: none !important;
+    }
+    .landing .foot-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing .btn,
+    .landing .how-row,
+    .landing .deck .card {
+        transition: none;
+    }
+}

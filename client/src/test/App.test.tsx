@@ -50,25 +50,25 @@ afterEach(() => {
 });
 
 describe("routes", () => {
-    it("renders the landing page", () => {
+    it("renders the landing page", async () => {
         renderAt("/");
-        expect(screen.getByText("Freshly brewed questions")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Start Brewing" })).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(/Solve it while\s*it is still hot/i);
+        expect(screen.getByRole("link", { name: /See today.s menu/ })).toHaveAttribute("href", "#menu");
     });
 
-    it("renders the about page", () => {
+    it("sends /about to the landing page's how-it-works section", async () => {
         renderAt("/about");
-        expect(screen.getByText("About Code Cafe")).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: "How a run works" })).toBeInTheDocument();
     });
 
-    it("renders the sign in form", () => {
+    it("renders the sign in form", async () => {
         renderAt("/signin");
-        expect(screen.getByRole("heading", { name: "Welcome back to the counter" })).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: "Welcome back to the counter" })).toBeInTheDocument();
     });
 
-    it("keeps /signup working: it opens the sign-up form", () => {
+    it("keeps /signup working: it opens the sign-up form", async () => {
         renderAt("/signup");
-        expect(screen.getByRole("heading", { name: "Open a tab" })).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: "Open a tab" })).toBeInTheDocument();
     });
 
     it("lists problems from a mocked API", async () => {

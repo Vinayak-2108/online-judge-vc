@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import CodeMirror from "@uiw/react-codemirror";
 import { EditorView } from "@codemirror/view";
-import { cpp } from "@codemirror/lang-cpp";
-import { java } from "@codemirror/lang-java";
-import { python } from "@codemirror/lang-python";
+import type { Extension } from "@codemirror/state";
 import { ChevronLeftIcon, ChevronRightIcon, CircleCheckIcon, RotateCcwIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,6 +42,13 @@ const STARTER: Record<string, string> = {
 };
 
 const LANG_ITEMS = LANGUAGE_LABEL;
+
+/** Language support is loaded on demand: only the language in use is downloaded. */
+async function loadLanguage(lang: string): Promise<Extension> {
+    if (lang === "py") return (await import("@codemirror/lang-python")).python();
+    if (lang === "java") return (await import("@codemirror/lang-java")).java();
+    return (await import("@codemirror/lang-cpp")).cpp();
+}
 
 /* ---- drafts and the last run: per problem (and language), in storage that may be unavailable ---- */
 
@@ -343,10 +348,18 @@ const Workspace = () => {
         setSavedTimes((t) => ({ ...t, [key]: 0 }));
     };
 
-    const extensions = useMemo(
-        () => [lang === "py" ? python() : lang === "java" ? java() : cpp(), EditorView.lineWrapping],
-        [lang],
-    );
+    const [languageExts, setLanguageExts] = useState<Record<string, Extension>>({});
+    useEffect(() => {
+        let live = true;
+        loadLanguage(lang)
+            .then((ext) => live && setLanguageExts((all) => (all[lang] ? all : { ...all, [lang]: ext })))
+            .catch(() => {});
+        return () => {
+            live = false;
+        };
+    }, [lang]);
+    const languageExt = languageExts[lang];
+    const extensions = useMemo(() => (languageExt ? [languageExt, EditorView.lineWrapping] : [EditorView.lineWrapping]), [languageExt]);
 
     const next = encodeURIComponent(location.pathname);
     const askToLogin = (message: string) =>
