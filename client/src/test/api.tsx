@@ -65,7 +65,7 @@ interface Options {
     token?: boolean;
     questions?: unknown[];
     submissions?: (url: string) => unknown[];
-    summary?: { everyone: number; mine: number | null };
+    summary?: { everyone?: number; mine?: number | null; matching?: number; matching_week?: number };
     /** Responses for POSTs, by path suffix. */
     post?: Record<string, { status?: number; body: unknown }>;
 }
@@ -87,7 +87,11 @@ export function mockApi(opts: Options = {}) {
             if (url.includes("/accounts/test_token")) return reply({ tag: true, username: "alice", email: "alice@school.edu" });
             if (url.includes("/accounts/logout")) return reply({ message: "Logged out" });
             if (url.includes("/api/me/")) return reply(me);
-            if (url.includes("/api/submissions/summary/")) return reply(opts.summary ?? { everyone: 214, mine: opts.token ? 9 : null });
+            if (url.includes("/api/submissions/summary/")) {
+                const rows = opts.submissions ? opts.submissions(url.replace("/summary/", "/") + "&limit=1000") : [sub(7)];
+                const week = rows.length;
+                return reply({ everyone: 214, mine: opts.token ? 9 : null, matching: rows.length, matching_week: week, ...opts.summary });
+            }
             if (url.includes("/api/submissions/")) return reply(opts.submissions ? opts.submissions(url) : [sub(7)]);
             return reply(opts.questions ?? questions);
         }),

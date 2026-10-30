@@ -176,15 +176,38 @@ describe("submissions screen", () => {
         expect(screen.getByText(/4 submissions in the last 7 days · Newest first/)).toBeInTheDocument();
     });
 
-    it("filters by verdict and language", async () => {
+    it("filters on the server by verdict and language, and takes the caption from the server", async () => {
         const user = userEvent.setup();
-        mockApi({ submissions: () => [sub(7), sub(6, { verdict: "Wrong Answer on tc 2", language: "cpp" })] });
+        const rows = [sub(7), sub(6, { verdict: "Wrong Answer on tc 2", language: "cpp" })];
+        mockApi({
+            submissions: (url) => {
+                const q = new URL(url).searchParams;
+                return rows.filter((r) => (!q.get("language") || r.language === q.get("language")) && (!q.get("verdict") || (q.get("verdict") === "wrong" ? r.verdict.startsWith("Wrong") : r.verdict === "Accepted")));
+            },
+        });
         renderAt("/submissions");
         await screen.findByText("#7");
+        expect(await screen.findByText(/2 submissions in the last 7 days/)).toBeInTheDocument();
+
         await user.click(screen.getByRole("combobox", { name: "Filter by language" }));
         await user.click(await screen.findByRole("option", { name: "C++ (GCC 9.2)" }));
-        expect(screen.queryByText("#7")).not.toBeInTheDocument();
+        await waitFor(() => expect(screen.queryByText("#7")).not.toBeInTheDocument());
         expect(screen.getByText("#6")).toBeInTheDocument();
+        expect(await screen.findByText(/1 submission in the last 7 days/)).toBeInTheDocument();
+        expect(calls.some((c) => c.url.includes("/api/submissions/?") && c.url.includes("language=cpp"))).toBe(true);
+        expect(calls.some((c) => c.url.includes("/summary/") && c.url.includes("language=cpp"))).toBe(true);
+
+        await user.click(screen.getByRole("combobox", { name: "Filter by verdict" }));
+        await user.click(await screen.findByRole("option", { name: "Accepted" }));
+        expect(await screen.findByText("No submissions match those filters.")).toBeInTheDocument();
+        expect(calls.some((c) => c.url.includes("verdict=accepted") && c.url.includes("language=cpp"))).toBe(true);
+    });
+
+    it("says how many submissions there are even when not all are in the last 7 days", async () => {
+        mockApi({ summary: { matching: 40, matching_week: 12 }, submissions: () => [sub(7)] });
+        renderAt("/submissions");
+        await screen.findByText("#7");
+        expect(await screen.findByText(/40 submissions · Newest first/)).toBeInTheDocument();
     });
 
     it("defaults to Mine when logged in, with a sentence and a Retry button", async () => {
@@ -224,6 +247,7 @@ describe("submissions screen", () => {
         const user = userEvent.setup();
         const all = Array.from({ length: 70 }, (_, i) => sub(70 - i));
         mockApi({
+            summary: { matching: 70, matching_week: 70 },
             submissions: (url) => {
                 const offset = Number(new URL(url).searchParams.get("offset") ?? 0);
                 return all.slice(offset, offset + 50);

@@ -44,6 +44,9 @@ export interface RunResponse {
 export interface SubmissionSummary {
     everyone: number;
     mine: number | null;
+    /** Submissions matching the current scope and filters, and how many of them are from the last 7 days. */
+    matching?: number;
+    matching_week?: number;
 }
 
 export interface RoastCounts {

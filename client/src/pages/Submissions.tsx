@@ -127,13 +127,15 @@ const Submissions = () => {
     const isDesktop = useIsDesktop();
     const [rootRef, width] = useElementWidth<HTMLDivElement>();
     const [scope, setScope] = useState<Scope | null>(null);
-    const [result, setResult] = useState<{ scope: Scope; rows: Submission[]; more: boolean } | null>(null);
+    const [result, setResult] = useState<{ scope: string; rows: Submission[]; more: boolean } | null>(null);
     const [mineRows, setMineRows] = useState<Submission[]>([]);
     const [summary, setSummary] = useState<SubmissionSummary | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
     const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "time", dir: "desc" });
     const [verdictFilter, setVerdictFilter] = useState<"any" | VerdictKind>("any");
     const [langFilter, setLangFilter] = useState("any");
+    // how many submissions match the scope and filters (from the server), and how many are recent
+    const [counts, setCounts] = useState<{ key: string; matching: number; week: number } | null>(null);
 
     // Default to the viewer's own submissions when signed in, everyone's otherwise.
     const active: Scope | null = scope ?? (ready ? (user ? "mine" : "everyone") : null);
@@ -155,41 +157,49 @@ const Submissions = () => {
         };
     }, [ready, user]);
 
+    const filters = useMemo(
+        () => ({
+            mine: active === "mine",
+            verdict: verdictFilter === "any" ? undefined : verdictFilter,
+            language: langFilter === "any" ? undefined : langFilter,
+        }),
+        [active, verdictFilter, langFilter],
+    );
+    const filterKey = `${active}|${verdictFilter}|${langFilter}`;
+
     useEffect(() => {
         if (!active || needsLogin) return;
         let live = true;
-        get_all_submissions({ mine: active === "mine", limit: PAGE })
-            .then((page) => live && setResult({ scope: active, rows: page, more: page.length === PAGE }))
-            .catch(() => live && setResult({ scope: active, rows: [], more: false }));
+        get_all_submissions({ ...filters, limit: PAGE })
+            .then((page) => live && setResult({ scope: filterKey, rows: page, more: page.length === PAGE }))
+            .catch(() => live && setResult({ scope: filterKey, rows: [], more: false }));
+        get_submission_summary(filters)
+            .then((s) => live && s && setCounts({ key: filterKey, matching: s.matching ?? 0, week: s.matching_week ?? 0 }))
+            .catch(() => {});
         return () => {
             live = false;
         };
-    }, [active, needsLogin]);
+    }, [active, needsLogin, filters, filterKey]);
 
-    const current = result && result.scope === active ? result : null;
+    const current = result && result.scope === filterKey ? result : null;
+    const serverCounts = counts && counts.key === filterKey ? counts : null;
     const rows = useMemo(() => current?.rows ?? [], [current]);
-    const more = current?.more ?? false;
+    // no "Load more" once every matching row is on screen
+    const more = (current?.more ?? false) && (serverCounts ? rows.length < serverCounts.matching : true);
     const loading = !needsLogin && !!active && !current;
 
     const loadMore = async () => {
         if (!active) return;
         setLoadingMore(true);
         try {
-            const page = await get_all_submissions({ mine: active === "mine", limit: PAGE, offset: rows.length });
+            const page = await get_all_submissions({ ...filters, limit: PAGE, offset: rows.length });
             setResult((r) => (r ? { ...r, rows: [...r.rows, ...page], more: page.length === PAGE } : r));
         } finally {
             setLoadingMore(false);
         }
     };
 
-    const filtered = useMemo(
-        () =>
-            rows.filter(
-                (s) => (verdictFilter === "any" || verdictKind(s.verdict) === verdictFilter) && (langFilter === "any" || s.language === langFilter),
-            ),
-        [rows, verdictFilter, langFilter],
-    );
-    const sorted = useMemo(() => [...filtered].sort((a, b) => compare(a, b, sort.key, sort.dir)), [filtered, sort]);
+    const sorted = useMemo(() => [...rows].sort((a, b) => compare(a, b, sort.key, sort.dir)), [rows, sort]);
     const sortProps = (key: SortKey, natural: SortDir = "asc") => ({
         active: sort.key === key,
         dir: sort.dir,
@@ -201,7 +211,8 @@ const Submissions = () => {
     // Lay out by the sheet's own width: two-line rows when narrow, the table without Language when middling, all columns when wide.
     const mode: "list" | "mid" | "full" = width < (showUser ? 900 : 780) ? "list" : width < 1190 ? "mid" : "full";
     const shown = needsLogin ? [] : sorted;
-    const allInWeek = shown.length > 0 && shown.every((s) => now.getTime() - when(s) <= WEEK_MS);
+    const total = serverCounts?.matching ?? shown.length;
+    const allInWeek = serverCounts ? serverCounts.matching > 0 && serverCounts.matching === serverCounts.week : shown.length > 0 && shown.every((s) => now.getTime() - when(s) <= WEEK_MS);
     const sortCaption =
         sort.key === "time"
             ? sort.dir === "desc"
@@ -278,7 +289,7 @@ const Submissions = () => {
                         </SelectContent>
                     </Select>
                     <p className="m-0 ml-auto text-[14px] text-muted-ink">
-                        {shown.length} {shown.length === 1 ? "submission" : "submissions"}
+                        {total} {total === 1 ? "submission" : "submissions"}
                         {allInWeek ? " in the last 7 days" : ""} {"·"} {sortCaption}
                     </p>
                 </div>
@@ -293,7 +304,7 @@ const Submissions = () => {
                 </p>
             ) : shown.length === 0 ? (
                 <p className="m-0 border-b border-rule py-6 text-[14px] text-muted-ink md:mt-4">
-                    {loading || !active ? "Loading submissions" : rows.length ? "No submissions match those filters." : "No submissions yet."}
+                    {loading || !active ? "Loading submissions" : verdictFilter !== "any" || langFilter !== "any" ? "No submissions match those filters." : "No submissions yet."}
                 </p>
             ) : mode !== "list" ? (
                 <Table className="mt-4 table-fixed text-[15px]">
