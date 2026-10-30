@@ -392,3 +392,72 @@ class ExecuteParamsTests(APITestCase):
         self.assertEqual(post.call_args.kwargs['params']['fields'], '*')
         self.assertEqual(compiler.run_code('x', 'py')['exit_code'], 3)
         self.assertEqual(result['exit_code'], 3)
+
+
+class DemoTests(APITestCase):
+    fixtures = ['sample_problems']
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def post(self, path, **extra):
+        body = {'lang': 'py', 'code': 'print(5)', 'input_data': '2 3', **extra}
+        return self.client.post(f'/api/demo/{path}', body, format='json')
+
+    @mock.patch('codecafe.compiler.execute')
+    def test_anyone_can_run_and_nothing_is_saved(self, execute):
+        execute.return_value = judge0_result(3, stdout='5\n')
+        res = self.post('run')
+        self.assertEqual((res.status_code, res.data['output']), (200, '5\n'))
+        execute.assert_called_once_with('print(5)', 'py', '2 3')
+        self.assertFalse(Submissions.objects.exists())
+
+    @mock.patch('codecafe.compiler.execute')
+    def test_submit_judges_only_the_sum_problem_and_saves_nothing(self, execute):
+        outputs = iter(['5', '15', '2000000000'])
+        execute.side_effect = lambda *a, **k: judge0_result(3, stdout=next(outputs))
+        res = self.post('submit', problem_id=3)  # a problem id in the body is ignored
+        self.assertEqual(res.data, {'verdict': 'Accepted', 'passed': 3, 'total': 3, 'runtime_ms': 10})
+        self.assertEqual([c.args[2] for c in execute.call_args_list], ['2 3', '-10\n25', '1000000000 1000000000'])
+        self.assertFalse(Submissions.objects.exists())
+
+    @mock.patch('codecafe.compiler.execute')
+    def test_a_wrong_answer_reports_counts(self, execute):
+        execute.side_effect = [judge0_result(3, stdout='5'), judge0_result(3, stdout='0')]
+        res = self.post('submit')
+        self.assertEqual((res.data['verdict'], res.data['passed'], res.data['total']), ('Wrong Answer on tc 2', 1, 3))
+
+    def test_limits_and_validation(self):
+        self.assertEqual(self.post('run', code='x' * 10_001).status_code, 400)
+        self.assertEqual(self.post('run', input_data='9' * 1_001).status_code, 400)
+        self.assertEqual(self.post('run', code='  ').status_code, 400)
+        self.assertEqual(self.post('submit', lang='rust').status_code, 400)
+        self.assertEqual(self.client.get('/api/demo/run').status_code, 405)
+
+    @mock.patch('codecafe.compiler.execute')
+    def test_signed_in_users_and_stale_tokens_work_too(self, execute):
+        execute.return_value = judge0_result(3, stdout='5')
+        user = User.objects.create_user('alice', 'alice@example.com', 'Brew-1234-coffee')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {Token.objects.create(user=user).key}')
+        self.assertEqual(self.post('run').status_code, 200)
+        self.client.credentials(HTTP_AUTHORIZATION='Token stale')
+        self.assertEqual(self.post('run').status_code, 200)
+
+    @mock.patch('codecafe.compiler.execute')
+    def test_throttled_after_ten_requests_a_minute(self, execute):
+        execute.return_value = judge0_result(3, stdout='5')
+        codes = [self.post('run').status_code for _ in range(11)]
+        self.assertEqual(codes[:10], [200] * 10)
+        self.assertEqual(codes[10], 429)
+        self.assertEqual(self.post('submit').status_code, 429)  # one budget for both demo endpoints
+
+    @mock.patch('codecafe.compiler.execute', side_effect=compiler.JudgeError('down'))
+    def test_judge_down_is_a_503(self, execute):
+        self.assertEqual(self.post('run').status_code, 503)
+        self.assertEqual(self.post('submit').status_code, 503)
+
+    def test_missing_demo_problem_is_a_404(self):
+        from .models import QuestionList
+        QuestionList.objects.filter(slug='sum-of-two-numbers').delete()
+        self.assertEqual(self.post('submit').status_code, 404)

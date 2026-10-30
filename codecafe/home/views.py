@@ -4,8 +4,9 @@ from django.db.models import Count, Min, Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, throttle_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.response import Response
 
 from codecafe import compiler
@@ -235,3 +236,71 @@ def submit_code(request):
         'total': total,
         'runtime_ms': runtime_ms,
     })
+
+
+# ---- The landing page's live editor: one demo problem, open to everyone ----
+
+DEMO_SLUG = 'sum-of-two-numbers'
+DEMO_MAX_CODE = 10_000
+DEMO_MAX_INPUT = 1_000
+
+
+class DemoThrottle(SimpleRateThrottle):
+    """10 requests a minute per client address, signed in or not."""
+
+    scope = 'demo'
+
+    def get_rate(self):
+        return '10/min'
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {'scope': self.scope, 'ident': self.get_ident(request)}
+
+
+def _validate_demo(request):
+    lang, code, error = _validate_code(request)
+    if error:
+        return None, None, None, error
+    if len(code) > DEMO_MAX_CODE:
+        return None, None, None, Response(
+            {'error': f'Code is too long for the demo (limit {DEMO_MAX_CODE} characters)'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    stdin = request.data.get('input_data') or ''
+    if not isinstance(stdin, str) or len(stdin) > DEMO_MAX_INPUT:
+        return None, None, None, Response(
+            {'error': f'Input is too long for the demo (limit {DEMO_MAX_INPUT} characters)'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return lang, code, stdin, None
+
+
+@api_view(['POST'])
+@authentication_classes([])  # a stale token must not turn a public demo into a 401
+@permission_classes([AllowAny])
+@throttle_classes([DemoThrottle])
+def demo_run(request):
+    lang, code, stdin, error = _validate_demo(request)
+    if error:
+        return error
+    try:
+        return Response(compiler.run_code(code, lang, stdin))
+    except compiler.JudgeError:
+        return Response({'error': 'Judge unavailable, try again later'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+@throttle_classes([DemoThrottle])
+def demo_submit(request):
+    """Judge against the demo problem's test cases. Nothing is saved."""
+    lang, code, _, error = _validate_demo(request)
+    if error:
+        return error
+    question = get_object_or_404(QuestionList, slug=DEMO_SLUG)
+    try:
+        verdict, passed, total, runtime_ms = compiler.judge(code, lang, TestCases.objects.filter(question=question).order_by('id'))
+    except compiler.JudgeError:
+        return Response({'error': 'Judge unavailable, try again later'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    return Response({'verdict': verdict, 'passed': passed, 'total': total, 'runtime_ms': runtime_ms})

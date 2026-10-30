@@ -13,4 +13,6 @@ urlpatterns = [
     path("submissions/summary/", views.submissionsSummary, name="submissionsSummary"),
     path("submissions/<int:pk>/", views.submissionDetail, name="submissionDetail"),
     path("me/", views.me, name="me"),
+    path("demo/run", views.demo_run, name="demo_run"),
+    path("demo/submit", views.demo_submit, name="demo_submit"),
 ]
