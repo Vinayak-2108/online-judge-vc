@@ -48,7 +48,7 @@ const mono: CSSProperties = {
     fontVariantNumeric: "tabular-nums",
 };
 
-const codeBox: CSSProperties = { ...mono, fontSize: 13, lineHeight: 1.7, whiteSpace: "pre", margin: 0, padding: 0 };
+const codeBox: CSSProperties = { ...mono, fontSize: "var(--hero-code, 13px)", lineHeight: 1.7, whiteSpace: "pre", margin: 0, padding: 0 };
 
 interface Slip {
     id: number;
@@ -190,7 +190,7 @@ export default function HeroEditor() {
                     </TabsList>
                 </Tabs>
 
-                <div style={{ display: "flex", padding: "16px 18px", overflowX: "auto" }}>
+                <div className="hero-code-wrap" style={{ display: "flex", padding: "16px 18px", overflowX: "auto" }}>
                     <pre aria-hidden style={{ ...codeBox, color: "var(--muted)", paddingRight: 14, userSelect: "none" }}>
                         {lines.map((_, i) => `${i + 1}\n`).join("")}
                     </pre>
@@ -224,6 +224,7 @@ export default function HeroEditor() {
                 </div>
 
                 <div
+                    className="hero-controls"
                     style={{
                         display: "flex",
                         alignItems: "center",
@@ -274,7 +275,7 @@ export default function HeroEditor() {
                 )}
             </div>
 
-            <div aria-live="polite" style={{ width: 300, maxWidth: "100%", minHeight: 150 }}>
+            <div aria-live="polite" className="slip-box" style={{ width: 300, maxWidth: "100%", minHeight: 150 }}>
                 <motion.div
                     key={slip ? slip.id : "blank"}
                     initial={reduce || !slip ? false : { y: -48, opacity: 0, rotate: -5, scaleY: 0.86 }}
@@ -294,19 +295,25 @@ export default function HeroEditor() {
                     <div aria-hidden style={{ color: "#615a52", letterSpacing: ".1em" }}>
                         - - - - - - - - - - - - - - - -
                     </div>
-                    <div>Sum of Two Numbers</div>
-                    <div>{LANGUAGE_LABEL[lang]}</div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div className="slip-full">Sum of Two Numbers</div>
+                    <div className="slip-full">{LANGUAGE_LABEL[lang]}</div>
+                    <div className="slip-full" style={{ display: "flex", justifyContent: "space-between" }}>
                         <span>{rows.verdict}</span>
                         <span className="num">{rows.tests}</span>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div className="slip-full" style={{ display: "flex", justifyContent: "space-between" }}>
                         <span>Run time</span>
                         <span className="num">{rows.time}</span>
                     </div>
+                    <div className="slip-phone">
+                        <span>{rows.verdict}</span>
+                        <span className="num">
+                            {slip ? `${rows.tests.replace(" tests", "")} · ${rows.time}` : ""}
+                        </span>
+                    </div>
                 </motion.div>
             </div>
-            <p style={{ margin: 0, fontSize: 15, color: "var(--muted)", textAlign: "center" }}>
+            <p className="room-hint" style={{ margin: 0, fontSize: 15, color: "var(--muted)", textAlign: "center" }}>
                 Change the input, then press Run or Submit. Practice runs are not saved.
             </p>
         </div>

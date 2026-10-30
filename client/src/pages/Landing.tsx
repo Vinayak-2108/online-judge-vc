@@ -46,10 +46,11 @@ function Hero() {
                 style={{ background: "var(--sheet)", display: "flex", flexDirection: "column", alignItems: "center", overflow: "hidden", minWidth: 0 }}
             >
                 <Awning className="hero-stripes" />
-                <div style={{ alignSelf: "stretch", display: "flex", justifyContent: "flex-end", padding: "20px 32px 0" }}>
+                <div className="hero-toggle" style={{ alignSelf: "stretch", display: "flex", justifyContent: "flex-end", padding: "20px 32px 0" }}>
                     <ThemeToggle />
                 </div>
                 <div
+                    className="hero-body"
                     style={{
                         flex: 1,
                         display: "flex",
@@ -62,7 +63,7 @@ function Hero() {
                 >
                     <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--text)" }}>
                         <CoffeeIcon size={34} strokeWidth={2} color="var(--brand)" aria-hidden />
-                        <span className="display" style={{ fontSize: 40 }}>
+                        <span className="display hero-brand" style={{ fontSize: 40 }}>
                             Code Cafe
                         </span>
                     </div>
@@ -71,7 +72,7 @@ function Hero() {
                         <br />
                         it is still hot
                     </h1>
-                    <p style={{ maxWidth: "36ch", fontSize: 19, lineHeight: 1.5, margin: "32px 0 0" }}>
+                    <p className="hero-copy" style={{ maxWidth: "36ch", fontSize: 19, lineHeight: 1.5, margin: "32px 0 0" }}>
                         An online judge for C, C++, Python and Java. Pick a problem off the menu, write your solution, and get a verdict in seconds.
                     </p>
                     <a className="btn btn-accent" href="#menu" style={{ marginTop: 32 }}>
@@ -97,6 +98,9 @@ function Hero() {
                             Sign in
                         </Link>
                     )}
+                    <span className="nav-theme">
+                        <ThemeToggle />
+                    </span>
                 </nav>
             </div>
             <HeroEditor />
@@ -594,7 +598,7 @@ export default function Landing() {
     useEffect(() => {
         if (!location.hash) return;
         const id = location.hash.slice(1);
-        const t = setTimeout(() => document.getElementById(id)?.scrollIntoView(), 50);
+        const t = setTimeout(() => document.getElementById(id)?.scrollIntoView?.(), 50);
         return () => clearTimeout(t);
     }, [location.hash]);
 

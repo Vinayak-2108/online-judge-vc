@@ -33,8 +33,18 @@
 .landing a {
     color: var(--brand);
 }
+.landing a {
+    text-decoration: underline;
+}
 .landing a:hover {
     color: var(--text);
+}
+.landing a.btn,
+.landing a.card {
+    text-decoration: none;
+}
+.landing .nav-theme {
+    display: none;
 }
 .landing :focus-visible {
     outline: 2px solid var(--brand);
@@ -52,6 +62,9 @@
     margin: 0;
 }
 
+.landing .slip-phone {
+    display: none;
+}
 .landing .num {
     font-variant-numeric: tabular-nums;
 }
@@ -172,8 +185,75 @@
     .landing .hero-stripes {
         height: 40px !important;
     }
-    .landing .room-title {
+    .landing .slip-phone {
+        display: flex !important;
+        justify-content: space-between;
+    }
+    .landing .room-title,
+    .landing .room-hint,
+    .landing .slip-full {
         display: none !important;
+    }
+    .landing .room {
+        --hero-code: 12px;
+        gap: 14px !important;
+    }
+    .landing .hero-controls {
+        gap: 8px !important;
+        padding: 10px 14px !important;
+        flex-wrap: nowrap !important;
+    }
+    .landing .hero-controls label {
+        font-size: 13px !important;
+    }
+    .landing #hero-input {
+        width: 72px !important;
+        height: 32px !important;
+    }
+    .landing .room .ui .btn,
+    .landing .hero-controls .btn {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13px;
+    }
+    .landing .hero-body {
+        padding: 24px 0 24px !important;
+    }
+    .landing .hero-body h1 {
+        margin-top: 22px !important;
+    }
+    .landing .slip-box {
+        width: 220px !important;
+        min-height: 0 !important;
+    }
+    .landing .hero-code-wrap {
+        scrollbar-width: none;
+    }
+    .landing .hero-toggle {
+        display: none !important;
+    }
+    .landing .nav-theme {
+        display: inline-flex;
+        align-items: center;
+    }
+    .landing .hero-brand {
+        font-size: 30px !important;
+    }
+    .landing .hero-card nav {
+        padding: 0 16px 18px !important;
+        gap: 12px 20px !important;
+    }
+    .landing .hero-card nav a {
+        text-decoration: underline;
+    }
+    .landing .hero-card .btn-accent {
+        align-self: stretch;
+        margin: 20px 20px 0 !important;
+        height: 52px;
+    }
+    .landing .hero-copy {
+        font-size: 16px !important;
+        margin: 16px 20px 0 !important;
     }
     .landing .how {
         padding: 96px 16px !important;

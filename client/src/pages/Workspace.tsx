@@ -211,7 +211,7 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
                 <VerdictPill verdict={t.verdict} />
                 <span className="font-code text-[14px] tabular-nums">{t.passed}/{t.total}</span>
                 <Runtime text={runtimeFor(t.verdict, t.runtime_ms)} />
-                <Link to="/submissions" className="ml-auto shrink-0 whitespace-nowrap text-foreground underline">
+                <Link to="/submissions" className="ml-auto shrink-0 whitespace-nowrap text-brand-strong underline">
                     All
                 </Link>
             </div>
@@ -231,7 +231,7 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
             <span className="min-w-0 truncate text-muted-ink">
                 {LANGUAGE_LABEL[t.lang] ?? t.lang} {"·"} {relativeTime(new Date(t.at).toISOString())}
             </span>
-            <Link to="/submissions" className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-foreground underline">
+            <Link to="/submissions" className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-brand-strong">
                 All submissions
                 <ChevronRightIcon className="size-4" aria-hidden />
             </Link>

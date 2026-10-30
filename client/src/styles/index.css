@@ -26,6 +26,7 @@
     --muted: #615a52;
 
     --brand: #c45200; /* text and marks */
+    --brand-strong: #b84c00; /* brand text on the raised surface (4.6:1 on #f4f2ee) */
     --brand-fill: #f86f03; /* fills, ink label on top */
     --brand-ink: #1a1612;
 
@@ -59,6 +60,7 @@
     --muted: #b4b0aa;
 
     --brand: #ff8a2a;
+    --brand-strong: #ff8a2a;
     --brand-fill: #ff8a2a;
     --brand-ink: #1a1612;
 
@@ -93,6 +95,7 @@
     --color-muted-ink: var(--muted);
     --color-brand: var(--brand);
     --color-brand-fill: var(--brand-fill);
+    --color-brand-strong: var(--brand-strong);
     --color-brand-ink: var(--brand-ink);
     --color-roast-light: var(--roast-light);
     --color-roast-medium: var(--roast-medium);
