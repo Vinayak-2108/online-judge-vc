@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
 import { CircleAlertIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,12 +34,24 @@ function Label({ htmlFor, children }: { htmlFor: string; children: string }) {
     );
 }
 
+/** Only same-site paths are followed after login (no //host, no schemes). */
+export function safeNext(value: string | null): string {
+    return value && value.startsWith("/") && !value.startsWith("//") && !value.includes("\\") ? value : "/problems";
+}
+
+/** Two username ideas for a taken name: a number on the end, and the part of the email before the @. */
+export function usernameSuggestions(username: string, email: string): string[] {
+    const local = email.split("@")[0]?.replace(/[^A-Za-z0-9._]/g, "") ?? "";
+    return [`${username}2`, local && local.toLowerCase() !== username.toLowerCase() ? local : `${username}.1`];
+}
+
 /** Sign in and create account share one card; /signin?mode=signup opens the second. */
 const SignIn = () => {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { user, login } = useAuth();
     const [params, setParams] = useSearchParams();
     const signup = params.get("mode") === "signup";
+    const target = safeNext(params.get("next"));
 
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
@@ -48,9 +60,16 @@ const SignIn = () => {
     const [errors, setErrors] = useState<Errors>({});
     const [busy, setBusy] = useState(false);
 
+    // After an error, put the cursor in the first field that needs attention.
+    useEffect(() => {
+        const first = (["username", "email", "password"] as const).find((name) => errors[name]);
+        if (first) document.getElementById(first)?.focus();
+    }, [errors]);
+
     const switchMode = () => {
         setErrors({});
-        setParams(signup ? {} : { mode: "signup" });
+        const next = params.get("next");
+        setParams(signup ? (next ? { next } : {}) : { mode: "signup", ...(next ? { next } : {}) });
     };
 
     const validate = (): Errors => {
@@ -75,13 +94,14 @@ const SignIn = () => {
                 const data = await register_user({ username: username.trim(), email: email.trim(), password });
                 if (data.token) {
                     await login(data.token);
-                    navigate("/problems");
+                    navigate(target);
                     return;
                 }
+                const [first, second] = usernameSuggestions(username.trim(), email.trim());
                 setErrors({
                     username: data.username
                         ? /exist|taken|unique/i.test(joinMessages(data.username))
-                            ? `That username is taken. Try ${username.trim()}2.`
+                            ? `That username is taken. Try ${first} or ${second}.`
                             : joinMessages(data.username)
                         : undefined,
                     email: data.email
@@ -95,7 +115,7 @@ const SignIn = () => {
                 const data = await login_user({ username: username.trim(), password });
                 if (data.tag && data.token) {
                     await login(data.token);
-                    navigate("/problems");
+                    navigate(target);
                     return;
                 }
                 setErrors({ password: data.error ?? "Invalid username or password." });
@@ -109,6 +129,9 @@ const SignIn = () => {
 
     const described = (name: keyof Errors, extra?: string) =>
         [errors[name] ? `${name}-error` : null, extra].filter(Boolean).join(" ") || undefined;
+
+    // Already signed in: nothing to do here.
+    if (user) return <Navigate to={target} replace />;
 
     return (
         <div className="flex min-h-dvh flex-col bg-frame text-foreground">

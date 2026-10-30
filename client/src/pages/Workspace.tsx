@@ -242,7 +242,7 @@ const Workspace = () => {
     const { slug = "" } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, ready } = useAuth();
+    const { user, ready, logout } = useAuth();
     const editorTheme = useEditorTheme();
     const wide = useMediaQuery("(min-width: 1024px)");
     const phone = !useMediaQuery("(min-width: 768px)");
@@ -350,7 +350,13 @@ const Workspace = () => {
 
     const next = encodeURIComponent(location.pathname);
     const askToLogin = (message: string) =>
-        toast.error(message, { action: { label: "Log in", onClick: () => navigate(`/signin?next=${next}`) } });
+        toast.error(message, {
+            action: {
+                label: "Log in",
+                // a rejected token must be dropped first, or the sign-in page would send us straight back
+                onClick: () => void (user ? logout() : Promise.resolve()).finally(() => navigate(`/signin?next=${next}`)),
+            },
+        });
 
     const needCode = (): boolean => {
         if (!user) {
