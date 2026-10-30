@@ -253,9 +253,36 @@ class ProblemStatsTests(APITestCase):
         self.sub(self.alice, 1, 'Accepted')
         self.sub(self.bob, 1, 'Accepted')
         self.sub(self.bob, 2, 'Accepted')
-        self.assertEqual(self.client.get('/api/submissions/summary/').data, {'everyone': 3, 'mine': None})
+        anon = self.client.get('/api/submissions/summary/').data
+        self.assertEqual((anon['everyone'], anon['mine'], anon['matching']), (3, None, 3))
         self.auth(self.bob)
-        self.assertEqual(self.client.get('/api/submissions/summary/').data, {'everyone': 3, 'mine': 2})
+        mine = self.client.get('/api/submissions/summary/?mine=1').data
+        self.assertEqual((mine['everyone'], mine['mine'], mine['matching'], mine['matching_week']), (3, 2, 2, 2))
+
+    def test_submission_filters_and_matching_counts(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        self.sub(self.alice, 1, 'Accepted')
+        self.sub(self.alice, 1, 'Wrong Answer on tc 3')
+        self.sub(self.alice, 2, 'Time Limit Exceeded on tc 1')
+        self.sub(self.alice, 2, 'Compilation Error')
+        old = self.sub(self.alice, 2, 'Runtime Error on tc 2')
+        Submissions.objects.filter(pk=old.pk).update(submission_time=timezone.now() - timedelta(days=30), language='cpp')
+        verdicts = lambda q: sorted(s['verdict'] for s in self.client.get('/api/submissions/' + q).data)
+        self.assertEqual(verdicts('?verdict=accepted'), ['Accepted'])
+        self.assertEqual(verdicts('?verdict=wrong'), ['Wrong Answer on tc 3'])
+        self.assertEqual(verdicts('?verdict=time'), ['Time Limit Exceeded on tc 1'])
+        self.assertEqual(verdicts('?verdict=compile'), ['Compilation Error'])
+        self.assertEqual(verdicts('?verdict=runtime'), ['Runtime Error on tc 2'])
+        self.assertEqual(len(verdicts('?language=cpp')), 1)
+        self.assertEqual(len(verdicts('?language=py')), 4)
+        summary = self.client.get('/api/submissions/summary/?language=cpp').data
+        self.assertEqual((summary['matching'], summary['matching_week']), (1, 0))
+        summary = self.client.get('/api/submissions/summary/').data
+        self.assertEqual((summary['matching'], summary['matching_week']), (5, 4))
+        for bad in ('?verdict=nope', '?language=rust'):
+            self.assertEqual(self.client.get('/api/submissions/' + bad).status_code, 400)
+            self.assertEqual(self.client.get('/api/submissions/summary/' + bad).status_code, 400)
 
     def test_questions_list_with_bad_token_is_rejected(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token nope')
@@ -353,3 +380,14 @@ class SeedDemoTests(APITestCase):
         riya = User.objects.get(username='riya_s')
         self.assertEqual(riya.submissions.count(), 9)
         self.assertIsNone(riya.submissions.filter(verdict='Compilation Error').get().runtime_ms)
+
+
+class ExecuteParamsTests(APITestCase):
+    @mock.patch('codecafe.compiler.requests.post')
+    def test_execute_asks_judge0_for_all_fields_so_exit_code_is_returned(self, post):
+        post.return_value.json.return_value = {'status': {'id': 11}, 'exit_code': 3, 'time': '0.02'}
+        post.return_value.raise_for_status.return_value = None
+        result = compiler.execute('import sys; sys.exit(3)', 'py')
+        self.assertEqual(post.call_args.kwargs['params']['fields'], '*')
+        self.assertEqual(compiler.run_code('x', 'py')['exit_code'], 3)
+        self.assertEqual(result['exit_code'], 3)

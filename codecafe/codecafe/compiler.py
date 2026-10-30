@@ -50,7 +50,8 @@ def execute(code, lang, stdin='', expected_output=None):
     try:
         res = requests.post(
             f'{settings.JUDGE0_URL}/submissions',
-            params={'base64_encoded': 'true', 'wait': 'true'},
+            # fields=* because Judge0's default response leaves out exit_code
+            params={'base64_encoded': 'true', 'wait': 'true', 'fields': '*'},
             json=payload,
             headers=_headers(),
             timeout=settings.JUDGE0_TIMEOUT,

@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.db.models import Count, Min, Q
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -16,6 +19,14 @@ from .serializers import (
 
 ACCEPTED = 'Accepted'
 ROASTS = [value for value, _ in QuestionList.DIFFICULTY_CHOICES]
+# verdict filter value -> how the server's verdict string starts
+VERDICT_PREFIXES = {
+    'accepted': 'Accepted',
+    'wrong': 'Wrong Answer',
+    'time': 'Time Limit',
+    'compile': 'Compilation',
+    'runtime': 'Runtime Error',
+}
 SUBMISSIONS_DEFAULT_LIMIT = 100
 SUBMISSIONS_MAX_LIMIT = 100
 
@@ -78,11 +89,31 @@ def questionDetail(request, pk=None, slug=None):
     return Response(QuestionsSerializer(question).data)
 
 
-@api_view(['GET'])
-def submissionsList(request):
-    submissions = Submissions.objects.select_related('user', 'question').order_by('-submission_time', '-id')
+def _filtered_submissions(request):
+    """Submissions narrowed by ?mine=1&verdict=&language=; returns (queryset, error response)."""
+    submissions = Submissions.objects.select_related('user', 'question')
     if request.query_params.get('mine') and request.user.is_authenticated:
         submissions = submissions.filter(user=request.user)
+    verdict = request.query_params.get('verdict')
+    if verdict:
+        prefix = VERDICT_PREFIXES.get(verdict)
+        if prefix is None:
+            return None, Response({'error': f'Unknown verdict filter: {verdict}'}, status=status.HTTP_400_BAD_REQUEST)
+        submissions = submissions.filter(verdict=prefix) if verdict == 'accepted' else submissions.filter(verdict__startswith=prefix)
+    language = request.query_params.get('language')
+    if language:
+        if language not in compiler.LANG_IDS:
+            return None, Response({'error': f'Unsupported language: {language}'}, status=status.HTTP_400_BAD_REQUEST)
+        submissions = submissions.filter(language=language)
+    return submissions, None
+
+
+@api_view(['GET'])
+def submissionsList(request):
+    submissions, error = _filtered_submissions(request)
+    if error:
+        return error
+    submissions = submissions.order_by('-submission_time', '-id')
     try:
         limit = int(request.query_params.get('limit', SUBMISSIONS_DEFAULT_LIMIT))
         offset = int(request.query_params.get('offset', 0))
@@ -96,10 +127,17 @@ def submissionsList(request):
 
 @api_view(['GET'])
 def submissionsSummary(request):
-    """Totals for the tab labels: everyone's submissions and, when signed in, the caller's own."""
+    """Totals for the tab labels (everyone / mine) and, for the current filters
+    (?mine=1&verdict=&language=), how many submissions match and how many of those are from the last 7 days."""
+    matching, error = _filtered_submissions(request)
+    if error:
+        return error
+    week_ago = timezone.now() - timedelta(days=7)
     return Response({
         'everyone': Submissions.objects.count(),
         'mine': Submissions.objects.filter(user=request.user).count() if request.user.is_authenticated else None,
+        'matching': matching.count(),
+        'matching_week': matching.filter(submission_time__gte=week_ago).count(),
     })
 
 
