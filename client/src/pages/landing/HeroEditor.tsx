@@ -179,7 +179,7 @@ export default function HeroEditor() {
                 <Tabs value={lang} onValueChange={(v) => setLang(String(v))} className="gap-0">
                     <TabsList
                         aria-label="Language"
-                        className="gap-5 border-b px-[18px] pt-2.5 max-md:gap-4"
+                        className="gap-5 border-b px-[18px] pt-2.5 max-md:gap-4" /* taste-skill-ignore: inside the data-ui editor fragment */
                         style={{ background: "var(--sheet)" }}
                     >
                         {TABS.map((t) => (

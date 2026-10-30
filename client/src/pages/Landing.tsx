@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useLocation } from "react-router";
 import { ChevronLeftIcon, ChevronRightIcon, CoffeeIcon } from "lucide-react";
 import { useReducedMotion } from "motion/react";
@@ -22,6 +22,28 @@ import HeroEditor from "./landing/HeroEditor";
 import "./landing/landing.css";
 
 const sectionPad = "160px 32px";
+
+/** Scroll-in entrance: a ref callback and the classes for the element. Visible at once where observers do not exist. */
+function useReveal(extra = ""): [(el: HTMLElement | null) => void, string] {
+    const [el, setEl] = useState<HTMLElement | null>(null);
+    const [shown, setShown] = useState(typeof IntersectionObserver === "undefined");
+    useEffect(() => {
+        if (!el || shown) return;
+        const io = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    setShown(true);
+                    io.disconnect();
+                }
+            },
+            { threshold: 0.12 },
+        );
+        io.observe(el);
+        return () => io.disconnect();
+    }, [el, shown]);
+    const ref = useCallback((node: HTMLElement | null) => setEl(node), []);
+    return [ref, `reveal ${extra} ${shown ? "in" : ""}`];
+}
 
 /* ---------------- awning ---------------- */
 
@@ -120,8 +142,9 @@ const kw: CSSProperties = { color: "var(--kw)" };
 const TEST_TIMES = ["0.011 s", "0.012 s", "0.010 s", "0.013 s", "0.012 s", "0.031 s", "0.014 s"];
 
 function Step({ title, text, gap, children }: { title: string; text: string; gap: number; children: React.ReactNode }) {
+    const [ref, cls] = useReveal();
     return (
-        <div className="how-col">
+        <div ref={ref} className={`how-col ${cls}`}>
             <h3 style={stepTitle}>{title}</h3>
             <p style={stepText}>{text}</p>
             <div style={{ height: gap }} />
@@ -132,6 +155,7 @@ function Step({ title, text, gap, children }: { title: string; text: string; gap
 
 function HowItWorks() {
     const reduce = useReducedMotion();
+    const [headRef, headCls] = useReveal();
     const row = useRef<HTMLDivElement>(null);
     const [progress, setProgress] = useState(60);
 
@@ -151,7 +175,7 @@ function HowItWorks() {
 
     return (
         <section id="how" className="how" style={{ background: "var(--sheet)", padding: sectionPad, overflow: "hidden" }}>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+            <div ref={headRef} className={headCls} style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
                 <h2 className="display" style={{ fontSize: 64, flex: 1 }}>
                     How a run works
                 </h2>
@@ -313,6 +337,8 @@ function pickDeck(questions: Question[]): DeckItem[] {
 }
 
 function Menu({ questions }: { questions: Question[] }) {
+    const [titleRef, titleCls] = useReveal();
+    const [deckRef, deckCls] = useReveal();
     const deck = useMemo(() => pickDeck(questions), [questions]);
     const start = Math.max(0, deck.findIndex((d) => d.slug === "sum-of-two-numbers"));
     const [chosen, setChosen] = useState<number | null>(null);
@@ -323,10 +349,10 @@ function Menu({ questions }: { questions: Question[] }) {
 
     return (
         <section id="menu" className="menu" style={{ background: "var(--frame)", padding: sectionPad }}>
-            <h2 className="display" style={{ fontSize: 64 }}>
+            <h2 ref={titleRef} className={`display ${titleCls}`} style={{ fontSize: 64 }}>
                 On the menu
             </h2>
-            <div className="deck" style={{ display: "flex", height: 360, overflow: "hidden", marginTop: 40 }}>
+            <div ref={deckRef} className={`deck ${deckCls}`} style={{ display: "flex", height: 360, overflow: "hidden", marginTop: 40 }}>
                 {deck.map((item, i) => {
                     const flex = i < active ? "0 0 120px" : i === active ? "0 0 620px" : i === active + 1 ? "1 1 0px" : "0 0 0px";
                     const style: CSSProperties = {
@@ -343,20 +369,28 @@ function Menu({ questions }: { questions: Question[] }) {
                         display: "block",
                         textDecoration: "none",
                     };
+                    const spine = i < active;
                     const inner = (
-                        <div className="inner" style={{ width: 556, height: 360, boxSizing: "border-box", padding: 32, display: "flex", flexDirection: "column", gap: 12 }}>
-                            <span style={{ fontSize: 30, fontWeight: 600, lineHeight: 1.1, letterSpacing: "-.01em" }}>{item.name}</span>
-                            <span style={{ fontSize: 16, lineHeight: 1.5, maxWidth: "46ch" }}>{item.excerpt}</span>
-                            <span style={{ flex: 1 }} />
-                            <span style={{ display: "flex", justifyContent: "space-between", gap: 16, fontSize: 16 }}>
-                                <span>
-                                    {ROAST_LABEL[item.roast]} {"·"} {item.acceptance} accepted
+                        <>
+                            {spine && (
+                                <div className="spine">
+                                    <span>{item.name}</span>
+                                </div>
+                            )}
+                            <div className="inner" style={{ width: 556, height: 360, boxSizing: "border-box", padding: 32, display: "flex", flexDirection: "column", gap: 12 }}>
+                                <span style={{ fontSize: 30, fontWeight: 600, lineHeight: 1.1, letterSpacing: "-.01em" }}>{item.name}</span>
+                                <span style={{ fontSize: 16, lineHeight: 1.5, maxWidth: "46ch" }}>{item.excerpt}</span>
+                                <span style={{ flex: 1 }} />
+                                <span style={{ display: "flex", justifyContent: "space-between", gap: 16, fontSize: 16 }}>
+                                    <span>
+                                        {ROAST_LABEL[item.roast]} {"·"} {item.acceptance} accepted
+                                    </span>
+                                    <span className="solve" style={{ fontWeight: 600 }}>
+                                        Solve it
+                                    </span>
                                 </span>
-                                <span className="solve" style={{ fontWeight: 600 }}>
-                                    Solve it
-                                </span>
-                            </span>
-                        </div>
+                            </div>
+                        </>
                     );
                     return i === active ? (
                         <Link key={item.slug} className="card" to={`/problems/${item.slug}`} style={style} aria-label={`${item.name}: solve it`}>
@@ -409,8 +443,43 @@ function slipTime(s: Submission): string {
     return formatRuntime(s.runtime_ms);
 }
 
+function SlipCard({ s, i }: { s: Submission; i: number }) {
+    const [ref, cls] = useReveal("reveal-slip");
+    return (
+        <div
+            ref={ref}
+            className={`slip ${cls}`}
+            style={{
+                flex: 1,
+                minWidth: 0,
+                height: SLIP_HEIGHTS[i % 6],
+                background: "#ffffff",
+                color: "#1a1612",
+                padding: "18px 18px 0",
+                boxSizing: "border-box",
+                transform: `rotate(${SLIP_TILTS[i % 6]}deg)`,
+                transitionDelay: `${i * 70}ms`,
+                fontSize: 15,
+                lineHeight: 1.6,
+            }}
+        >
+            <div style={{ fontWeight: 700 }}>Submission #{s.id}</div>
+            <div aria-hidden style={{ color: "#615a52", letterSpacing: ".1em" }}>
+                - - - - - - - - - -
+            </div>
+            <div>{s.problem}</div>
+            <div>{LANGUAGE_LABEL[s.language] ?? s.language}</div>
+            <div>{verdictShort(s.verdict)}</div>
+            <div className="num">{s.passed != null && s.total != null ? `${s.passed} of ${s.total} tests` : "\u2014"}</div>
+            <div className="num">{slipTime(s)}</div>
+            <div style={{ color: "#615a52" }}>{relativeTime(s.submission_time)}</div>
+        </div>
+    );
+}
+
 function Showcase({ submissions }: { submissions: Submission[] }) {
     const slips = useMemo(() => pickSlips(submissions), [submissions]);
+    const [scrimRef, scrimCls] = useReveal();
     return (
         <section className="showcase" style={{ position: "relative", height: 900, overflow: "hidden", background: "#111" }}>
             <img
@@ -422,7 +491,7 @@ function Showcase({ submissions }: { submissions: Submission[] }) {
                 decoding="async"
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 70%" }}
             />
-            <div className="scrim" style={{ position: "absolute", left: "18%", top: 112, width: "min(600px, 70%)", background: "rgba(12,10,8,.72)", color: "#ffffff", padding: "36px 40px" }}>
+            <div ref={scrimRef} className={`scrim ${scrimCls}`} style={{ position: "absolute", left: "18%", top: 112, width: "min(600px, 70%)", background: "rgba(12,10,8,.72)", color: "#ffffff", padding: "36px 40px" }}>
                 <h2 className="display" style={{ fontSize: 56 }}>
                     Argued over at a table
                 </h2>
@@ -432,39 +501,12 @@ function Showcase({ submissions }: { submissions: Submission[] }) {
                 <p style={{ margin: "16px 0 0", fontSize: 22, lineHeight: 1.45 }}>
                     Every run prints a slip. {slips.length ? `These ${slips.length === 6 ? "six" : slips.length} came in this week.` : "The first ones will land here."}
                 </p>
+                <p style={{ margin: "20px 0 0", fontSize: 13, color: "#ffffff" }}>Pictured: the Indian Coffee House, College Street, Kolkata.</p>
             </div>
-            <p style={{ position: "absolute", top: 24, left: 32, margin: 0, fontSize: 13, color: "#ffffff", background: "rgba(12,10,8,.72)", padding: "6px 10px" }}>
-                Indian Coffee House, College Street, Kolkata
-            </p>
+
             <div className="slips" style={{ position: "absolute", left: 12, right: 12, bottom: -48, gap: 12, alignItems: "flex-end" }}>
                 {slips.map((s, i) => (
-                    <div
-                        key={s.id}
-                        className="slip"
-                        style={{
-                            flex: 1,
-                            minWidth: 0,
-                            height: SLIP_HEIGHTS[i % 6],
-                            background: "#ffffff",
-                            color: "#1a1612",
-                            padding: "18px 18px 0",
-                            boxSizing: "border-box",
-                            transform: `rotate(${SLIP_TILTS[i % 6]}deg)`,
-                            fontSize: 15,
-                            lineHeight: 1.6,
-                        }}
-                    >
-                        <div style={{ fontWeight: 700 }}>Submission #{s.id}</div>
-                        <div aria-hidden style={{ color: "#615a52", letterSpacing: ".1em" }}>
-                            - - - - - - - - - -
-                        </div>
-                        <div>{s.problem}</div>
-                        <div>{LANGUAGE_LABEL[s.language] ?? s.language}</div>
-                        <div>{verdictShort(s.verdict)}</div>
-                        <div className="num">{s.passed != null && s.total != null ? `${s.passed} of ${s.total} tests` : "—"}</div>
-                        <div className="num">{slipTime(s)}</div>
-                        <div style={{ color: "#615a52" }}>{relativeTime(s.submission_time)}</div>
-                    </div>
+                    <SlipCard key={s.id} s={s} i={i} />
                 ))}
             </div>
         </section>
@@ -475,13 +517,15 @@ function Showcase({ submissions }: { submissions: Submission[] }) {
 
 function Cta() {
     const { user } = useAuth();
+    const [cardRef, cardCls] = useReveal();
     return (
         <section id="signin" className="cta" style={{ position: "relative", minHeight: 760, overflow: "hidden", background: "var(--field)", color: "var(--on-field)", padding: "0 32px" }}>
             <p className="cta-copy" style={{ position: "absolute", left: 32, bottom: 64, maxWidth: "30%", margin: 0, fontSize: 22, lineHeight: 1.45 }}>
                 Free to use. No card, nothing to install. Your code runs in Judge0’s sandbox, never on our server.
             </p>
             <div
-                className="cta-card"
+                ref={cardRef}
+                className={`cta-card ${cardCls}`}
                 style={{ background: "var(--card)", color: "var(--text)", boxSizing: "border-box", padding: 48, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 16 }}
             >
                 <h2 className="display" style={{ fontSize: 44 }}>
