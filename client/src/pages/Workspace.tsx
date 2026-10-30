@@ -213,17 +213,17 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
         );
     return (
         <div
-            className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-card bg-raised px-4 py-3 text-[14px]"
+            className="flex items-center gap-x-2.5 rounded-card bg-raised px-3.5 py-3 text-[13.5px] whitespace-nowrap"
             aria-label="Latest submission"
             data-testid="ticket"
         >
-            <span className="font-code text-[14px]">Submission #{t.id}</span>
+            <span className="font-code text-[13px]">Submission #{t.id}</span>
             <VerdictPill verdict={t.verdict} />
             <span className="tabular-nums">
                 {t.passed} of {t.total} tests passed
             </span>
             <Runtime text={runtimeFor(t.verdict, t.runtime_ms)} />
-            <span className="text-muted-ink">
+            <span className="min-w-0 truncate text-muted-ink">
                 {LANGUAGE_LABEL[t.lang] ?? t.lang} {"·"} {relativeTime(new Date(t.at).toISOString())}
             </span>
             <Link to="/submissions" className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-brand">
