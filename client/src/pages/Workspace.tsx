@@ -518,7 +518,7 @@ const Workspace = () => {
     if (phone) {
         return (
             <div className="flex min-h-dvh flex-col bg-sheet">
-                <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
+                <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
                     <Link to="/problems" aria-label="Back to Problems" className="flex size-8 items-center justify-center rounded-control text-foreground">
                         <ChevronLeftIcon className="size-5" aria-hidden />
                     </Link>

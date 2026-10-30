@@ -95,7 +95,7 @@ const AppShell = () => {
             <header className="relative hidden h-[49px] shrink-0 items-center justify-between px-[18px] md:flex">
                 <Wordmark className="text-[17px]" />
                 {/* centred over the sheet (from the sidebar's edge to the right inset), as in the frame */}
-                <div className="pointer-events-none absolute inset-y-0 right-2 left-[229px] flex items-center justify-center px-4">
+                <div className="pointer-events-none absolute inset-y-0 right-[150px] left-[229px] lg:right-2 flex items-center justify-center px-4">
                     <div className="pointer-events-auto w-full max-w-[439px]">
                         <ProblemSearch variant="bar" />
                     </div>

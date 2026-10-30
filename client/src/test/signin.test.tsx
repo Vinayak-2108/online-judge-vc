@@ -46,7 +46,7 @@ describe("sign in", () => {
         await user.click(screen.getByRole("button", { name: "Sign in" }));
         await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/problems"));
         expect(localStorage.getItem("token")).toBe("abc123");
-        expect(await screen.findByText("alice@example.com")).toBeInTheDocument();
+        expect(await screen.findByText("alice@school.edu")).toBeInTheDocument();
     });
 
     it("reveals and hides the password", async () => {
@@ -78,7 +78,7 @@ describe("sign up", () => {
         mockApi();
         renderAt("/signup");
         await user.type(screen.getByLabelText("Username"), "riya_s");
-        await user.type(screen.getByLabelText("Email"), "riya.sen@example.edu");
+        await user.type(screen.getByLabelText("Email"), "riya.sen@school.edu");
         await user.type(password(), "hunter");
         await user.click(screen.getByRole("button", { name: "Create account" }));
         expect(
@@ -99,7 +99,7 @@ describe("sign up", () => {
         });
         renderAt("/signin?mode=signup");
         await user.type(screen.getByLabelText("Username"), "riya_s");
-        await user.type(screen.getByLabelText("Email"), "riya.sen@example.edu");
+        await user.type(screen.getByLabelText("Email"), "riya.sen@school.edu");
         await user.type(password(), "password1");
         await user.click(screen.getByRole("button", { name: "Create account" }));
         expect(await screen.findByText("That username is taken. Try riya_s2.")).toBeInTheDocument();
@@ -113,14 +113,14 @@ describe("sign up", () => {
         mockApi({ post: { "/accounts/signup": { status: 201, body: { token: "newtok", message: "User Created", user: { username: "riya_s" } } } } });
         renderAt("/signup");
         await user.type(screen.getByLabelText("Username"), "riya_s");
-        await user.type(screen.getByLabelText("Email"), "riya.sen@example.edu");
+        await user.type(screen.getByLabelText("Email"), "riya.sen@school.edu");
         await user.type(password(), "Brew-1234-coffee");
         await user.click(screen.getByRole("button", { name: "Create account" }));
         await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/problems"));
         expect(localStorage.getItem("token")).toBe("newtok");
         expect(calls.find((c) => c.url.endsWith("/accounts/signup"))!.body).toEqual({
             username: "riya_s",
-            email: "riya.sen@example.edu",
+            email: "riya.sen@school.edu",
             password: "Brew-1234-coffee",
         });
     });

@@ -27,7 +27,7 @@ describe("app shell", () => {
         const user = userEvent.setup();
         mockApi({ token: true });
         renderAt("/problems");
-        expect(await screen.findByText("alice@example.com")).toBeInTheDocument();
+        expect(await screen.findByText("alice@school.edu")).toBeInTheDocument();
         expect(screen.queryByRole("link", { name: "Log in / Register" })).not.toBeInTheDocument();
         await user.click(screen.getByRole("button", { name: "Log out" }));
         await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/signin"));

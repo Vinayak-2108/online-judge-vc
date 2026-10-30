@@ -32,7 +32,7 @@ export const questions = [
 
 export const me = {
     username: "alice",
-    email: "alice@example.com",
+    email: "alice@school.edu",
     submissions: 2,
     solved: 1,
     attempted: 1,
@@ -84,7 +84,7 @@ export function mockApi(opts: Options = {}) {
             for (const [suffix, r] of Object.entries(opts.post ?? {})) {
                 if (method === "POST" && url.endsWith(suffix)) return reply(r.body, r.status ?? 200);
             }
-            if (url.includes("/accounts/test_token")) return reply({ tag: true, username: "alice", email: "alice@example.com" });
+            if (url.includes("/accounts/test_token")) return reply({ tag: true, username: "alice", email: "alice@school.edu" });
             if (url.includes("/accounts/logout")) return reply({ message: "Logged out" });
             if (url.includes("/api/me/")) return reply(me);
             if (url.includes("/api/submissions/summary/")) return reply(opts.summary ?? { everyone: 214, mine: opts.token ? 9 : null });
