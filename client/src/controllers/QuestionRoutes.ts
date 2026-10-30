@@ -1,15 +1,16 @@
 import type { Question, RunResponse, SubmitResponse } from "../types";
+import { getToken } from "../lib/storage";
 
 const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`
 
 const authHeaders = () => ({
     "Content-Type" : "application/json",
-    "Authorization": `Token ${localStorage.getItem('token')}`,
+    "Authorization": `Token ${getToken()}`,
 });
 
 export const get_all_questions = async(): Promise<Question[]> => {
     // The token is optional: with it each problem carries the caller's status.
-    const token = localStorage.getItem('token');
+    const token = getToken();
     let res = await fetch(`${base}/questions/`, {
         headers: token ? { "Authorization": `Token ${token}` } : {},
     });

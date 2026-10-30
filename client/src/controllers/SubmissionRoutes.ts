@@ -1,4 +1,5 @@
 import type { Submission, SubmissionSummary } from "../types";
+import { getToken } from "../lib/storage";
 
 const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`;
 
@@ -14,7 +15,7 @@ export const get_all_submissions = async(query: SubmissionQuery = {}): Promise<S
     if (query.limit) params.set("limit", String(query.limit));
     if (query.offset) params.set("offset", String(query.offset));
     const qs = params.toString();
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const res = await fetch(`${base}/submissions/${qs ? `?${qs}` : ""}`, {
         headers: token && query.mine ? { "Authorization": `Token ${token}` } : {},
     });
@@ -23,7 +24,7 @@ export const get_all_submissions = async(query: SubmissionQuery = {}): Promise<S
 }
 
 export const get_submission_summary = async(): Promise<SubmissionSummary | null> => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const res = await fetch(`${base}/submissions/summary/`, {
         headers: token ? { "Authorization": `Token ${token}` } : {},
     });

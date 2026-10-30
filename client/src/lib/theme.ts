@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { storage } from "./storage";
 
 export type Theme = "light" | "dark";
 
@@ -7,7 +8,7 @@ const listeners = new Set<() => void>();
 
 function stored(): Theme | null {
     try {
-        const value = localStorage.getItem(KEY);
+        const value = storage.get(KEY);
         return value === "light" || value === "dark" ? value : null;
     } catch {
         return null;
@@ -33,7 +34,7 @@ function apply(theme: Theme) {
 export function setTheme(theme: Theme) {
     apply(theme);
     try {
-        localStorage.setItem(KEY, theme);
+        storage.set(KEY, theme);
     } catch {
         // private mode or blocked storage: the choice just lasts for this page view
     }

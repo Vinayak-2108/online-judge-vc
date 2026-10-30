@@ -1,4 +1,5 @@
 import type { AuthResponse, Me } from "../types";
+import { getToken, storage } from "../lib/storage";
 
 const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/accounts`;
 
@@ -25,7 +26,7 @@ export const login_user = async(obj: Record<string, unknown>) => {
     return ans;
 }
 export const auth_user = async(): Promise<AuthResponse> => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const res = await fetch(`${base}/test_token`, {
         method: 'POST',
         headers: {
@@ -37,18 +38,18 @@ export const auth_user = async(): Promise<AuthResponse> => {
     return ans;
 }
 export const logout_user = async() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     await fetch(`${base}/logout`, {
         method: 'POST',
         headers: {
             "Authorization": `Token ${token}`,
         },
     }).catch(() => {});
-    localStorage.removeItem('token');
+    storage.remove('token');
 }
 
 export const get_me = async(): Promise<Me | null> => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) return null;
     const res = await fetch(`${base.replace(/\/accounts$/, '')}/api/me/`, {
         headers: { "Authorization": `Token ${token}` },

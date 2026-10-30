@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { auth_user, logout_user } from "../controllers/UserRoutes";
+import { getToken, storage } from "./storage";
 
 interface AuthState {
     /** The signed-in username, or null when logged out. */
@@ -22,7 +23,7 @@ const AuthContext = createContext<AuthState>({
 
 function storedToken(): string | null {
     try {
-        return localStorage.getItem("token");
+        return getToken();
     } catch {
         return null;
     }
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const data = await auth_user();
             if (data.tag) setAccount({ user: data.username ?? "", email: data.email ?? "" });
             else {
-                localStorage.removeItem("token"); // revoked or expired
+                storage.remove('token'); // revoked or expired
                 setAccount(null);
             }
         } catch {
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .then((data) => {
                 if (!live) return;
                 if (data.tag) setAccount({ user: data.username ?? "", email: data.email ?? "" });
-                else localStorage.removeItem("token"); // revoked or expired
+                else storage.remove('token'); // revoked or expired
             })
             .catch(() => {})
             .finally(() => live && setReady(true));
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = useCallback(
         async (token: string) => {
             try {
-                localStorage.setItem("token", token);
+                storage.set("token", token);
             } catch {
                 // storage blocked: the session lasts for this page view only
             }
