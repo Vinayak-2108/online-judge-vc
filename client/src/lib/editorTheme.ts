@@ -14,7 +14,7 @@ const CODE_FONT = '"IBM Plex Mono", ui-monospace, monospace'; // taste-skill-ign
 function build(c: TokenSet, dark: boolean): Extension {
     const chrome = EditorView.theme(
         {
-            "&": { backgroundColor: c.sheet, color: c.text, height: "100%", fontSize: "14px" },
+            "&": { backgroundColor: c.sheet, color: c.text, height: "100%", fontSize: "14.4px" },
             ".cm-content": { caretColor: c.text, fontFamily: CODE_FONT, padding: "12px 0" },
             ".cm-scroller": { fontFamily: CODE_FONT, lineHeight: "1.5" },
             ".cm-cursor, .cm-dropCursor": { borderLeftColor: c.text },

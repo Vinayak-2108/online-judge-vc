@@ -78,6 +78,7 @@ class JudgeTests(APITestCase):
         execute.return_value = judge0_result(6, compile_output='error: expected ;')
         res = self.client.post('/api/questions/run', {'lang': 'cpp', 'code': 'x'}, format='json')
         self.assertEqual(res.data['error'], 'error: expected ;')
+        self.assertIsNone(res.data['runtime_ms'])
 
     @mock.patch('codecafe.compiler.execute')
     def test_submit_accepted_runs_all_testcases_of_problem(self, execute):

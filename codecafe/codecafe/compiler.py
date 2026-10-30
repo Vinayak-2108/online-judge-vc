@@ -91,7 +91,8 @@ def run_code(code, lang, stdin=''):
         'status': status.get('description', 'Unknown'),
         'output': result.get('stdout') or '',
         'error': error,
-        'runtime_ms': _runtime_ms(result),
+        # a program that never compiled has no runtime
+        'runtime_ms': None if status.get('id') == COMPILATION_ERROR else _runtime_ms(result),
         'exit_code': result.get('exit_code'),
     }
 

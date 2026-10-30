@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import CodeMirror from "@uiw/react-codemirror";
 import { EditorView } from "@codemirror/view";
 import { cpp } from "@codemirror/lang-cpp";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MenuSheet } from "../components/MenuSheet";
 import NotFound from "../components/NotFound";
 import RoastMark from "../components/RoastMark";
 import Runtime from "../components/Runtime";
@@ -32,6 +33,7 @@ import {
     TIME_LIMIT_S,
 } from "../lib/format";
 import { useMediaQuery } from "../lib/useMediaQuery";
+import { storage } from "../lib/storage";
 import type { Question, Submission } from "../types";
 
 const STARTER: Record<string, string> = {
@@ -43,9 +45,10 @@ const STARTER: Record<string, string> = {
 
 const LANG_ITEMS = LANGUAGE_LABEL;
 
-/* ---- drafts: one per problem and language, in localStorage (which may be unavailable) ---- */
+/* ---- drafts and the last run: per problem (and language), in storage that may be unavailable ---- */
 
 const draftKey = (slug: string, lang: string) => `cc:draft:${slug}:${lang}`;
+const runKey = (slug: string) => `cc:run:${slug}`;
 
 interface Draft {
     code: string;
@@ -54,7 +57,7 @@ interface Draft {
 
 export function readDraft(slug: string, lang: string): Draft | null {
     try {
-        const raw = localStorage.getItem(draftKey(slug, lang));
+        const raw = storage.get(draftKey(slug, lang));
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         return typeof parsed?.code === "string" ? { code: parsed.code, at: Number(parsed.at) || 0 } : null;
@@ -63,32 +66,30 @@ export function readDraft(slug: string, lang: string): Draft | null {
     }
 }
 
-function writeDraft(slug: string, lang: string, code: string): number | null {
+function writeDraft(slug: string, lang: string, code: string): number {
     const at = Date.now();
+    storage.set(draftKey(slug, lang), JSON.stringify({ code, at }));
+    return at;
+}
+
+interface LastRun {
+    input: string;
+    text: string;
+    meta: string;
+}
+
+function readRun(slug: string): LastRun | null {
     try {
-        localStorage.setItem(draftKey(slug, lang), JSON.stringify({ code, at }));
-        return at;
+        const parsed = JSON.parse(storage.get(runKey(slug)) ?? "null");
+        return parsed && typeof parsed.text === "string" ? parsed : null;
     } catch {
         return null;
     }
 }
 
-function clearDraft(slug: string, lang: string) {
-    try {
-        localStorage.removeItem(draftKey(slug, lang));
-    } catch {
-        // nothing to clear
-    }
-}
-
 function storedLang(): string {
-    try {
-        const v = localStorage.getItem("cc:lang");
-        if (v && v in LANGUAGE_LABEL) return v;
-    } catch {
-        // fall through
-    }
-    return "py";
+    const v = storage.get("cc:lang");
+    return v && v in LANGUAGE_LABEL ? v : "py";
 }
 
 /* ---- pieces ---- */
@@ -142,7 +143,7 @@ function Statement({ q }: { q: Question }) {
     );
 }
 
-function MySubmissions({ rows, loggedIn }: { rows: Submission[]; loggedIn: boolean }) {
+function MySubmissions({ rows, loggedIn, narrow = false }: { rows: Submission[]; loggedIn: boolean; narrow?: boolean }) {
     if (!loggedIn)
         return (
             <p className="m-0 py-4 text-[14px] text-muted-ink">
@@ -155,18 +156,32 @@ function MySubmissions({ rows, loggedIn }: { rows: Submission[]; loggedIn: boole
     if (!rows.length) return <p className="m-0 py-4 text-[14px] text-muted-ink">No submissions for this problem yet.</p>;
     return (
         <ul className="m-0 list-none p-0">
-            {rows.map((s) => (
-                <li key={s.id} className="flex items-center gap-3 border-b border-rule py-2.5 text-[14px]">
-                    <span className="font-code text-[13px] tabular-nums">#{s.id}</span>
-                    <VerdictPill verdict={s.verdict} />
-                    <span className="tabular-nums">{formatTests(s.passed, s.total)}</span>
-                    <span className="text-muted-ink">{LANGUAGE_LABEL[s.language] ?? s.language}</span>
-                    <span className="ml-auto flex items-center gap-3 text-muted-ink">
-                        <Runtime text={runtimeFor(s.verdict, s.runtime_ms)} />
-                        <span className="tabular-nums">{relativeTime(s.submission_time)}</span>
-                    </span>
-                </li>
-            ))}
+            {rows.map((s) =>
+                narrow ? (
+                    <li key={s.id} className="border-b border-rule py-2 text-[14px]">
+                        <div className="flex items-center gap-3">
+                            <span className="font-code text-[13px] tabular-nums">#{s.id}</span>
+                            <VerdictPill verdict={s.verdict} />
+                            <span className="ml-auto tabular-nums">{formatTests(s.passed, s.total)}</span>
+                        </div>
+                        <div className="mt-0.5 text-[13px] text-muted-ink">
+                            {LANGUAGE_LABEL[s.language] ?? s.language} {"\u00b7"} {runtimeFor(s.verdict, s.runtime_ms)} {"\u00b7"}{" "}
+                            {relativeTime(s.submission_time)}
+                        </div>
+                    </li>
+                ) : (
+                    <li key={s.id} className="flex items-center gap-3 border-b border-rule py-2.5 text-[14px]">
+                        <span className="font-code text-[13px] tabular-nums">#{s.id}</span>
+                        <VerdictPill verdict={s.verdict} />
+                        <span className="tabular-nums">{formatTests(s.passed, s.total)}</span>
+                        <span className="text-muted-ink">{LANGUAGE_LABEL[s.language] ?? s.language}</span>
+                        <span className="ml-auto flex items-center gap-3 text-muted-ink">
+                            <Runtime text={runtimeFor(s.verdict, s.runtime_ms)} />
+                            <span className="tabular-nums">{relativeTime(s.submission_time)}</span>
+                        </span>
+                    </li>
+                ),
+            )}
         </ul>
     );
 }
@@ -178,7 +193,8 @@ interface Ticket {
     total: number;
     runtime_ms: number | null;
     lang: string;
-    at: number;
+    /** ISO time */
+    at: string;
 }
 
 /** The submission ticket printed after Submit. */
@@ -190,7 +206,7 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
                 <VerdictPill verdict={t.verdict} />
                 <span className="font-code text-[14px] tabular-nums">{t.passed}/{t.total}</span>
                 <Runtime text={runtimeFor(t.verdict, t.runtime_ms)} />
-                <Link to="/submissions" className="ml-auto text-brand underline">
+                <Link to="/submissions" className="ml-auto shrink-0 whitespace-nowrap text-brand underline">
                     All
                 </Link>
             </div>
@@ -210,7 +226,7 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
             <span className="text-muted-ink">
                 {LANGUAGE_LABEL[t.lang] ?? t.lang} {"·"} {relativeTime(new Date(t.at).toISOString())}
             </span>
-            <Link to="/submissions" className="ml-auto inline-flex items-center gap-1 text-brand">
+            <Link to="/submissions" className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-brand">
                 All submissions
                 <ChevronRightIcon className="size-4" aria-hidden />
             </Link>
@@ -225,6 +241,7 @@ type Loaded = { q: Question } | "missing" | null;
 const Workspace = () => {
     const { slug = "" } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, ready } = useAuth();
     const editorTheme = useEditorTheme();
     const wide = useMediaQuery("(min-width: 1024px)");
@@ -233,16 +250,20 @@ const Workspace = () => {
     const [loaded, setLoaded] = useState<Loaded>(null);
     const [mineAll, setMine] = useState<Submission[]>([]);
     const [tab, setTab] = useState<"description" | "mine">("description");
-    const [phoneTab, setPhoneTab] = useState<"problem" | "code">("problem");
+    const [chosenPhoneTab, setPhoneTab] = useState<"problem" | "code" | null>(null);
 
     const [lang, setLang] = useState(storedLang);
-    const [edit, setEdit] = useState<{ key: string; code: string; at: number | null } | null>(null);
+    // In-memory edits and save times, keyed by problem + language. Each key owns its own text, so a
+    // language switch can never show (or save) another language's code.
+    const [codes, setCodes] = useState<Record<string, string>>({});
+    const [savedTimes, setSavedTimes] = useState<Record<string, number>>({});
     const [customInput, setCustomInput] = useState("");
     const [output, setOutput] = useState<{ text: string; meta: string } | null>(null);
     const [running, setRunning] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [ticket, setTicket] = useState<Ticket | null>(null);
+    const [localTicket, setLocalTicket] = useState<Ticket | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const pending = useRef<{ slug: string; lang: string; key: string; code: string } | null>(null);
     const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const q = loaded && loaded !== "missing" ? loaded.q : null;
@@ -258,7 +279,9 @@ const Workspace = () => {
                 if (!found) return setLoaded("missing");
                 if (found.slug !== slug) navigate(`/problems/${found.slug}`, { replace: true });
                 setLoaded({ q: found });
-                setCustomInput(found.examples[0]?.input ?? "");
+                const last = readRun(found.slug);
+                setCustomInput(last?.input ?? found.examples[0]?.input ?? "");
+                setOutput(last ? { text: last.text, meta: last.meta } : null);
             })
             .catch(() => live && setLoaded("missing"));
         return () => {
@@ -276,43 +299,48 @@ const Workspace = () => {
         if (ready) refreshMine();
     }, [ready, refreshMine]);
 
-    // The code for this problem and language: what is being edited, else the saved draft, else the starter.
+    // The code for this problem and language: this session's edit, else the saved draft (read now,
+    // synchronously), else the starter.
     const qSlug = q?.slug;
     const key = qSlug ? `${qSlug}:${lang}` : "";
     const stored = useMemo(() => (qSlug ? readDraft(qSlug, lang) : null), [qSlug, lang]);
-    const code = edit?.key === key ? edit.code : (stored?.code ?? STARTER[lang]);
-    const savedAt = edit?.key === key ? edit.at : (stored?.at ?? null);
+    const code = codes[key] ?? stored?.code ?? STARTER[lang];
+    const savedAt = key in savedTimes ? savedTimes[key] || null : (stored?.at ?? null);
 
-    const onCode = (value: string) => {
-        if (!qSlug) return;
-        setEdit({ key, code: value, at: savedAt });
+    /** Writes the pending draft (if any) to ITS OWN key, now. */
+    const flush = useCallback(() => {
         if (saveTimer.current) clearTimeout(saveTimer.current);
-        saveTimer.current = setTimeout(() => {
-            const at = writeDraft(qSlug, lang, value);
-            setEdit((e) => (e && e.key === key ? { ...e, at } : e));
-        }, 500);
+        saveTimer.current = null;
+        const p = pending.current;
+        pending.current = null;
+        if (!p) return;
+        const at = writeDraft(p.slug, p.lang, p.code);
+        setSavedTimes((t) => ({ ...t, [p.key]: at }));
+    }, []);
+
+    const onCode = (forKey: string, forLang: string, value: string) => {
+        if (!qSlug) return;
+        setCodes((c) => ({ ...c, [forKey]: value }));
+        pending.current = { slug: qSlug, lang: forLang, key: forKey, code: value };
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(flush, 500);
     };
-    useEffect(
-        () => () => {
-            if (saveTimer.current) clearTimeout(saveTimer.current);
-        },
-        [],
-    );
+    // Leaving the page keeps what was typed.
+    useEffect(() => flush, [flush]);
 
     const changeLang = (next: string) => {
+        flush(); // the old language's text goes to the old language's key before anything changes
         setLang(next);
-        try {
-            localStorage.setItem("cc:lang", next);
-        } catch {
-            // remembering the language is optional
-        }
+        storage.set("cc:lang", next);
     };
 
     const reset = () => {
         if (!q) return;
-        clearDraft(q.slug, lang);
         if (saveTimer.current) clearTimeout(saveTimer.current);
-        setEdit({ key, code: STARTER[lang], at: null });
+        pending.current = null;
+        storage.remove(draftKey(q.slug, lang));
+        setCodes((c) => ({ ...c, [key]: STARTER[lang] }));
+        setSavedTimes((t) => ({ ...t, [key]: 0 }));
     };
 
     const extensions = useMemo(
@@ -320,9 +348,13 @@ const Workspace = () => {
         [lang],
     );
 
+    const next = encodeURIComponent(location.pathname);
+    const askToLogin = (message: string) =>
+        toast.error(message, { action: { label: "Log in", onClick: () => navigate(`/signin?next=${next}`) } });
+
     const needCode = (): boolean => {
         if (!user) {
-            toast.error("Log in to run and submit code.", { action: { label: "Log in", onClick: () => navigate("/signin") } });
+            askToLogin("Log in to run and submit code.");
             return false;
         }
         if (!code.trim()) {
@@ -336,18 +368,20 @@ const Workspace = () => {
         if (!q || !needCode()) return;
         setRunning(true);
         try {
-            const { ok, data } = await run_compiler({ lang, code, input_data: customInput, problem_id: q.id });
+            const { ok, status: httpStatus, data } = await run_compiler({ lang, code, input_data: customInput, problem_id: q.id });
+            if (httpStatus === 401) return askToLogin("Your session has ended. Log in to keep going.");
             if (!ok) {
                 toast.error(data.error || "The run failed. Try again.");
                 return;
             }
-            const failed = !!data.error;
-            setOutput({
-                text: data.error || data.output || "(no output)",
-                meta: failed
-                    ? `${data.status ?? "Error"}`
-                    : `Ran in ${formatRuntime(data.runtime_ms)} · exit code ${data.exit_code ?? 0}`,
-            });
+            const text = data.error || data.output || "(no output)";
+            // A program that compiled and ran has a runtime and an exit code, even when it crashed.
+            const meta =
+                data.runtime_ms != null
+                    ? `Ran in ${formatRuntime(data.runtime_ms)} \u00b7 exit code ${data.exit_code ?? (data.error ? 1 : 0)}`
+                    : `${data.status ?? "Error"}`;
+            setOutput({ text, meta });
+            storage.set(runKey(q.slug), JSON.stringify({ input: customInput, text, meta }));
         } catch {
             toast.error("Could not reach the server.");
         } finally {
@@ -357,21 +391,23 @@ const Workspace = () => {
 
     const submit = async () => {
         if (!q || !needCode()) return;
+        flush();
         setSubmitting(true);
         try {
-            const { ok, data } = await submit_compiler({ lang, code, problem_id: q.id });
+            const { ok, status: httpStatus, data } = await submit_compiler({ lang, code, problem_id: q.id });
+            if (httpStatus === 401) return askToLogin("Your session has ended. Log in to keep going.");
             if (!ok || !data.verdict) {
                 toast.error(data.error || "The submission failed. Try again.");
                 return;
             }
-            setTicket({
+            setLocalTicket({
                 id: data.id ?? 0,
                 verdict: data.verdict,
                 passed: data.passed ?? 0,
                 total: data.total ?? q.test_count,
                 runtime_ms: data.runtime_ms ?? null,
                 lang,
-                at: Date.now(),
+                at: new Date().toISOString(),
             });
             if (phone) setDialogOpen(true);
             refreshMine();
@@ -386,6 +422,21 @@ const Workspace = () => {
             setSubmitting(false);
         }
     };
+
+    // The ticket for the last submission on this problem: from the saved submissions, or the one just printed.
+    const newest = mine.reduce<Submission | null>((best, s) => (!best || s.id > best.id ? s : best), null);
+    const mineTicket: Ticket | null = newest && {
+        id: newest.id,
+        verdict: newest.verdict,
+        passed: newest.passed ?? 0,
+        total: newest.total ?? q?.test_count ?? 0,
+        runtime_ms: newest.runtime_ms,
+        lang: newest.language,
+        at: newest.submission_time,
+    };
+    const ticket = localTicket && (!mineTicket || localTicket.id >= mineTicket.id) ? localTicket : mineTicket;
+    const hasHistory = !!stored || mine.length > 0;
+    const phoneTab = chosenPhoneTab ?? (hasHistory ? "code" : "problem");
 
     if (loaded === "missing")
         return <NotFound title="That problem is not on the menu." detail="It may have been renamed or removed." />;
@@ -450,8 +501,9 @@ const Workspace = () => {
     const editor = (
         <div className="min-h-0 flex-1 overflow-auto" data-testid="editor">
             <CodeMirror
+                key={key}
                 value={code}
-                onChange={onCode}
+                onChange={(value) => onCode(key, lang, value)}
                 theme={editorTheme}
                 extensions={extensions}
                 height="100%"
@@ -526,6 +578,7 @@ const Workspace = () => {
                     <span className="shrink-0 text-[14px] text-foreground">
                         <RoastMark roast={q.difficulty} />
                     </span>
+                    <MenuSheet className="-mr-2 shrink-0" />
                 </header>
                 <div className="px-4 pt-3">
                     <div role="tablist" aria-label="Problem and code" className="grid grid-cols-2 gap-1 rounded-card bg-raised p-1">
@@ -550,7 +603,7 @@ const Workspace = () => {
                         {meta}
                         <Statement q={q} />
                         <h2 className="m-0 mt-4 text-[16px] font-semibold">Your submissions</h2>
-                        <MySubmissions rows={mine} loggedIn={!!user} />
+                        <MySubmissions rows={mine} loggedIn={!!user} narrow />
                     </div>
                 ) : (
                     <>
