@@ -4,12 +4,21 @@ import { auth_user, logout_user } from "../controllers/UserRoutes";
 interface AuthState {
     /** The signed-in username, or null when logged out. */
     user: string | null;
+    email: string | null;
     /** false while a stored token is still being checked. */
     ready: boolean;
     logout: () => Promise<void>;
+    /** Stores a fresh token and loads the account it belongs to. */
+    login: (token: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthState>({ user: null, ready: true, logout: async () => {} });
+const AuthContext = createContext<AuthState>({
+    user: null,
+    email: null,
+    ready: true,
+    logout: async () => {},
+    login: async () => {},
+});
 
 function storedToken(): string | null {
     try {
@@ -20,16 +29,33 @@ function storedToken(): string | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<string | null>(null);
+    const [account, setAccount] = useState<{ user: string; email: string } | null>(null);
     const [ready, setReady] = useState(() => !storedToken());
 
+    const check = useCallback(async () => {
+        if (!storedToken()) {
+            setAccount(null);
+            return;
+        }
+        try {
+            const data = await auth_user();
+            if (data.tag) setAccount({ user: data.username ?? "", email: data.email ?? "" });
+            else {
+                localStorage.removeItem("token"); // revoked or expired
+                setAccount(null);
+            }
+        } catch {
+            // offline: keep the token, show logged out for now
+        }
+    }, []);
+
     useEffect(() => {
-        if (!storedToken()) return;
+        if (!storedToken()) return; // nothing to check: already ready and logged out
         let live = true;
         auth_user()
             .then((data) => {
                 if (!live) return;
-                if (data.tag) setUser(data.username ?? "");
+                if (data.tag) setAccount({ user: data.username ?? "", email: data.email ?? "" });
                 else localStorage.removeItem("token"); // revoked or expired
             })
             .catch(() => {})
@@ -39,12 +65,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
+    const login = useCallback(
+        async (token: string) => {
+            try {
+                localStorage.setItem("token", token);
+            } catch {
+                // storage blocked: the session lasts for this page view only
+            }
+            await check();
+            setReady(true);
+        },
+        [check],
+    );
+
     const logout = useCallback(async () => {
         await logout_user();
-        setUser(null);
+        setAccount(null);
     }, []);
 
-    const value = useMemo(() => ({ user, ready, logout }), [user, ready, logout]);
+    const value = useMemo(
+        () => ({ user: account?.user ?? null, email: account?.email ?? null, ready, logout, login }),
+        [account, ready, logout, login],
+    );
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

@@ -1,4 +1,4 @@
-import type { Question } from "../types";
+import type { Question, RunResponse, SubmitResponse } from "../types";
 
 const base = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`
 
@@ -24,22 +24,21 @@ export const get_question = async(id: number | string) => {
     return ans;
 }
 
-export const run_compiler = async(obj: Record<string, unknown>) => {
-    const res = await fetch(`${base}/questions/run`, {
-        method: 'POST',
-        body: JSON.stringify(obj),
-        headers: authHeaders(),
-    });
-    const ans = await res.json();
-    return ans;
+export interface ApiResult<T> {
+    ok: boolean;
+    status: number;
+    data: T;
 }
 
-export const submit_compiler = async(obj: Record<string, unknown>) => {
-    const res = await fetch(`${base}/questions/submit`, {
+async function post<T>(path: string, obj: Record<string, unknown>): Promise<ApiResult<T>> {
+    const res = await fetch(`${base}/questions/${path}`, {
         method: 'POST',
         body: JSON.stringify(obj),
         headers: authHeaders(),
     });
-    const ans = await res.json();
-    return ans;
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
 }
+
+export const run_compiler = (obj: Record<string, unknown>) => post<RunResponse>('run', obj);
+export const submit_compiler = (obj: Record<string, unknown>) => post<SubmitResponse>('submit', obj);

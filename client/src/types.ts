@@ -17,6 +17,7 @@ export interface Question {
     output_format: string;
     constraints: string;
     examples: QuestionExample[];
+    test_count: number;
     /** Only on the list endpoint. */
     status?: ProblemStatus;
     acceptance_rate?: number | null;
@@ -28,8 +29,21 @@ export interface SubmitResponse {
     verdict?: string;
     passed?: number;
     total?: number;
-    runtime_ms?: number;
+    runtime_ms?: number | null;
     error?: string;
+}
+
+export interface RunResponse {
+    status?: string;
+    output?: string;
+    error?: string;
+    runtime_ms?: number | null;
+    exit_code?: number | null;
+}
+
+export interface SubmissionSummary {
+    everyone: number;
+    mine: number | null;
 }
 
 export interface RoastCounts {
@@ -40,6 +54,7 @@ export interface RoastCounts {
 
 export interface Me {
     username: string;
+    email: string;
     submissions: number;
     solved: number;
     attempted: number;
@@ -64,4 +79,5 @@ export interface Submission {
 export interface AuthResponse {
     tag: boolean;
     username?: string;
+    email?: string;
 }

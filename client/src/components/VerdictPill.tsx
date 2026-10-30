@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { verdictTone, type VerdictTone } from "../lib/format";
+import { verdictShort, verdictTone, type VerdictTone } from "../lib/format";
 
 const TONE: Record<VerdictTone, string> = {
     positive: "bg-positive-bg text-positive",
@@ -7,9 +7,11 @@ const TONE: Record<VerdictTone, string> = {
     warning: "bg-warning-bg text-warning",
 };
 
-/** A verdict pill: pale tint with dark text of the same hue. */
+/** A short verdict pill (Accepted, Wrong answer, ...); the server's full string is its tooltip. */
 const VerdictPill = ({ verdict }: { verdict: string }) => (
-    <Badge className={`border-transparent px-2 text-[12px] font-medium ${TONE[verdictTone(verdict)]}`}>{verdict}</Badge>
+    <Badge title={verdict} className={`h-6 border-transparent px-2.5 text-[13px] font-medium ${TONE[verdictTone(verdict)]}`}>
+        {verdictShort(verdict)}
+    </Badge>
 );
 
 export default VerdictPill;

@@ -12,11 +12,13 @@ interface Props {
     className?: string;
 }
 
-/** A sortable column header: a button inside the th, aria-sort on the th. */
+const HEAD = "h-10 px-1.5 text-[13px] font-normal text-muted-foreground";
+
+/** A plain column header that sorts on click; a small arrow appears only on the sorted column. */
 const SortHeader = ({ label, active, dir, onSort, align = "left", className = "" }: Props) => (
     <TableHead
         aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
-        className={`h-10 px-2 text-[12px] font-medium text-muted-foreground ${align === "right" ? "text-right" : "text-left"} ${className}`}
+        className={`${HEAD} ${align === "right" ? "text-right" : "text-left"} ${className}`}
     >
         <button
             type="button"
@@ -24,11 +26,8 @@ const SortHeader = ({ label, active, dir, onSort, align = "left", className = ""
             className={`-mx-1 inline-flex items-center gap-1 rounded-control px-1 py-1 hover:text-foreground ${align === "right" ? "flex-row-reverse" : ""} ${active ? "text-foreground" : ""}`}
         >
             {label}
-            {active ? (
-                dir === "asc" ? <ArrowUpIcon className="size-3" aria-hidden /> : <ArrowDownIcon className="size-3" aria-hidden />
-            ) : (
-                <span className="size-3" aria-hidden />
-            )}
+            {active &&
+                (dir === "asc" ? <ArrowUpIcon className="size-3" aria-hidden /> : <ArrowDownIcon className="size-3" aria-hidden />)}
         </button>
     </TableHead>
 );
@@ -37,9 +36,14 @@ export default SortHeader;
 
 /** A header cell with no sorting; the label is for screen readers only. */
 export const PlainHeader = ({ label, className = "" }: { label: string; className?: string }) => (
-    <TableHead className={`h-10 px-2 ${className}`}>
+    <TableHead className={`${HEAD} ${className}`}>
         <span className="sr-only">{label}</span>
     </TableHead>
+);
+
+/** A header cell with a visible label and no sorting. */
+export const StaticHeader = ({ label, align = "left", className = "" }: { label: string; align?: "left" | "right"; className?: string }) => (
+    <TableHead className={`${HEAD} ${align === "right" ? "text-right" : "text-left"} ${className}`}>{label}</TableHead>
 );
 
 /** Toggles direction on the active column, otherwise switches column with its natural direction. */
@@ -51,8 +55,3 @@ export function nextSort<K extends string>(
     if (current.key === key) return { key, dir: current.dir === "asc" ? "desc" : "asc" };
     return { key, dir: natural };
 }
-
-/** A header cell with a visible label and no sorting. */
-export const StaticHeader = ({ label }: { label: string }) => (
-    <TableHead className="h-10 px-2 text-left text-[12px] font-medium text-muted-foreground">{label}</TableHead>
-);

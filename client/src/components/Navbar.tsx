@@ -28,14 +28,14 @@ const Navbar = () => {
                             className={link}
                             onClick={async () => {
                                 await logout();
-                                navigate("/signup");
+                                navigate("/signin");
                             }}
                         >
                             Log out
                         </button>
                     </>
                 ) : (
-                    <Link to="/signup" className={link}>
+                    <Link to="/signin" className={link}>
                         Log in / Register
                     </Link>
                 )}

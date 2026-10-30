@@ -21,6 +21,7 @@
     --rule: #f2f0ec;
     --active: #ece8e2; /* active nav pill on the frame */
     --control: #d4d0c9;
+    --faint: #8c857d; /* ring of an untried problem: quiet, still 3.6:1 */
     --text: #1a1612;
     --muted: #615a52;
 
@@ -53,6 +54,7 @@
     --rule: #1c1c1c;
     --active: #1e1e1e;
     --control: #3d3d3d;
+    --faint: #77736e;
     --text: #f5f3ef;
     --muted: #b4b0aa;
 
@@ -86,6 +88,7 @@
     --color-rule: var(--rule);
     --color-active: var(--active);
     --color-control: var(--control);
+    --color-faint: var(--faint);
     --color-text: var(--text);
     --color-muted-ink: var(--muted);
     --color-brand: var(--brand);
