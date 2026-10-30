@@ -14,6 +14,7 @@ import { get_all_questions } from "../controllers/QuestionRoutes";
 import { get_me } from "../controllers/UserRoutes";
 import { useAuth } from "../lib/auth";
 import { formatPercent, formatRuntime, ROAST_LABEL, ROAST_ORDER } from "../lib/format";
+import { useElementWidth } from "../lib/useElementWidth";
 import { useIsDesktop } from "../lib/useIsDesktop";
 import type { Me, ProblemStatus, Question, Roast } from "../types";
 
@@ -23,6 +24,8 @@ type SortKey = "name" | "roast" | "acceptance" | "best";
 
 /** Rows shown before "Show all N". */
 const CAP = 8;
+/** Below this sheet width the table gives way to two-line rows and the tiles go two by two. */
+const COMPACT_BELOW = 780;
 
 const ROAST_ITEMS: Record<RoastFilter, string> = {
     all: "Any roast",
@@ -111,6 +114,9 @@ export function findingLine(questions: Question[], me: Me | null, loggedIn: bool
 const ProblemsList = () => {
     const { user, ready } = useAuth();
     const isDesktop = useIsDesktop();
+    // The sheet is narrower than the window (sidebar, insets): lay out by its own width.
+    const [rootRef, width] = useElementWidth<HTMLDivElement>();
+    const compact = width < COMPACT_BELOW;
     const navigate = useNavigate();
     const [questions, setQuestions] = useState<Question[]>([]);
     const [me, setMe] = useState<Me | null>(null);
@@ -153,7 +159,7 @@ const ProblemsList = () => {
         return rows;
     }, [questions, tab, roast, search, sort]);
 
-    const visible = isDesktop && !showAll ? matches.slice(0, CAP) : matches;
+    const visible = !compact && !showAll ? matches.slice(0, CAP) : matches;
     const sortCaption = SORT_CAPTION[sort.key][sort.dir === "asc" ? 0 : 1];
 
     const counts = roastCounts(questions, me);
@@ -191,8 +197,8 @@ const ProblemsList = () => {
     const finding = findingLine(questions, me, !!user, !isDesktop);
 
     return (
-        <div className="flex w-full flex-col gap-3.5 px-4 pt-4 pb-8 md:gap-0 md:px-8 md:pt-7">
-            <div className="flex flex-col gap-3 md:mb-[29px] md:flex-row md:items-start md:justify-between md:gap-6">
+        <div ref={rootRef} className="flex w-full flex-col gap-3.5 px-4 pt-4 pb-8 md:gap-0 md:px-8 md:pt-7">
+            <div className={`flex flex-col gap-3 md:mb-[29px] ${compact ? "" : "md:flex-row md:items-start md:justify-between md:gap-6"}`}>
                 <div className="min-w-0">
                     <h1 className="m-0 text-[22px] leading-8 font-semibold tracking-[-0.01em] md:text-2xl">Problems</h1>
                     <p className="mt-1 mb-0 text-[14px] leading-[1.45] text-muted-ink">{finding}</p>
@@ -218,13 +224,13 @@ const ProblemsList = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 overflow-hidden rounded-card border border-border md:grid-cols-4" aria-label="Brewed by roast" role="group">
+            <div className={`grid overflow-hidden rounded-card border border-border ${compact ? "grid-cols-2" : "grid-cols-4"}`} aria-label="Brewed by roast" role="group">
                 {cells.map((c, i) => {
                     const pct = c.total ? Math.round((c.solved / c.total) * 100) : 0;
                     return (
                         <div
                             key={c.label}
-                            className={`flex flex-col px-3.5 pt-3 pb-3 md:px-5 md:pt-[18px] md:pb-[19px] ${i % 2 ? "border-l" : ""} ${i > 1 ? "border-t" : ""} md:border-t-0 ${i > 0 ? "md:border-l" : "md:border-l-0"}`}
+                            className={`flex flex-col px-3.5 pt-3 pb-3 md:px-5 md:pt-[18px] md:pb-[19px] ${compact ? `${i % 2 ? "border-l" : ""} ${i > 1 ? "border-t" : ""}` : i > 0 ? "border-l" : ""}`}
                         >
                             <span className="flex items-center gap-2 text-[13px] leading-5 text-muted-ink md:text-[15px]">
                                 {c.swatch ? <RoastSwatch roast={c.swatch} /> : <span className="inline-block h-3 w-2 md:hidden" aria-hidden />}
@@ -260,7 +266,7 @@ const ProblemsList = () => {
             </Tabs>
 
             {isDesktop && (
-                <div className="mt-4 flex items-center gap-3">
+                <div className="mt-4 flex flex-wrap items-center gap-3">
                     <div className="relative w-[299px]">
                         <SearchIcon
                             className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-foreground"
@@ -300,13 +306,13 @@ const ProblemsList = () => {
                 <p className="m-0 border-b border-rule py-6 text-[14px] text-muted-ink md:mt-4">
                     {questions.length ? "No problems match those filters." : "The menu is empty."}
                 </p>
-            ) : isDesktop ? (
+            ) : !compact ? (
                 <>
                     <Table className="mt-4 table-fixed text-[15px]">
                         <colgroup>
                             <col style={{ width: 40 }} />
                             <col />
-                            <col style={{ width: 206 }} />
+                            <col style={{ width: 214 }} />
                             <col style={{ width: 128 }} />
                             <col style={{ width: 128 }} />
                         </colgroup>
@@ -346,7 +352,7 @@ const ProblemsList = () => {
                             ))}
                         </TableBody>
                     </Table>
-                    {matches.length > CAP && !showAll && (
+                    {!compact && matches.length > CAP && !showAll && (
                         <button
                             type="button"
                             onClick={() => setShowAll(true)}

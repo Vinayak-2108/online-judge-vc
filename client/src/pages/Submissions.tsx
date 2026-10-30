@@ -22,6 +22,7 @@ import {
     verdictLabel,
     type VerdictKind,
 } from "../lib/format";
+import { useElementWidth } from "../lib/useElementWidth";
 import { useIsDesktop } from "../lib/useIsDesktop";
 import type { Submission, SubmissionSummary } from "../types";
 
@@ -124,6 +125,7 @@ export function submissionsSentence(rows: Submission[], now: Date = new Date()):
 const Submissions = () => {
     const { user, ready } = useAuth();
     const isDesktop = useIsDesktop();
+    const [rootRef, width] = useElementWidth<HTMLDivElement>();
     const [scope, setScope] = useState<Scope | null>(null);
     const [result, setResult] = useState<{ scope: Scope; rows: Submission[]; more: boolean } | null>(null);
     const [mineRows, setMineRows] = useState<Submission[]>([]);
@@ -196,6 +198,8 @@ const Submissions = () => {
 
     const now = new Date();
     const showUser = active === "everyone";
+    // Lay out by the sheet's own width: two-line rows when narrow, the table without Language when middling, all columns when wide.
+    const mode: "list" | "mid" | "full" = width < (showUser ? 900 : 780) ? "list" : width < 1190 ? "mid" : "full";
     const shown = needsLogin ? [] : sorted;
     const allInWeek = shown.length > 0 && shown.every((s) => now.getTime() - when(s) <= WEEK_MS);
     const sortCaption =
@@ -218,8 +222,8 @@ const Submissions = () => {
     const LANG_ITEMS: Record<string, string> = { any: "Any language", ...LANGUAGE_LABEL };
 
     return (
-        <div className="flex w-full flex-col gap-3.5 px-4 pt-4 pb-8 md:gap-0 md:px-8 md:pt-7">
-            <div className="flex flex-col gap-3 md:mb-5 md:flex-row md:items-start md:justify-between md:gap-6">
+        <div ref={rootRef} className="flex w-full flex-col gap-3.5 px-4 pt-4 pb-8 md:gap-0 md:px-8 md:pt-7">
+            <div className={`flex flex-col gap-3 md:mb-5 ${mode === "list" ? "" : "md:flex-row md:items-start md:justify-between md:gap-6"}`}>
                 <div className="min-w-0">
                     <h1 className="m-0 text-[22px] leading-8 font-semibold tracking-[-0.01em] md:text-2xl">Submissions</h1>
                     <p className="mt-1 mb-0 text-[14px] leading-[1.45] text-muted-ink">{subtitle}</p>
@@ -227,7 +231,7 @@ const Submissions = () => {
                 {retry && (
                     <Link
                         to={`/problems/${retry.problem_slug ?? ""}`}
-                        className="flex h-11 shrink-0 items-center justify-center rounded-control bg-primary px-4 text-[15px] font-medium text-primary-foreground no-underline hover:opacity-90 md:mt-2 md:h-9 md:text-[14px]"
+                        className="flex h-11 w-fit shrink-0 items-center justify-center rounded-control bg-primary px-4 text-[15px] font-medium text-primary-foreground no-underline hover:opacity-90 max-md:w-full md:mt-2 md:h-9 md:text-[14px]"
                     >
                         Retry {retry.problem}
                     </Link>
@@ -248,7 +252,7 @@ const Submissions = () => {
             </Tabs>
 
             {isDesktop && !needsLogin && (
-                <div className="mt-4 flex items-center gap-3">
+                <div className="mt-4 flex flex-wrap items-center gap-3">
                     <Select value={verdictFilter} onValueChange={(v) => setVerdictFilter((v ?? "any") as "any" | VerdictKind)} items={VERDICT_ITEMS}>
                         <SelectTrigger aria-label="Filter by verdict" className="h-[34px] w-[160px] bg-sheet text-[15px]">
                             <SelectValue />
@@ -291,24 +295,24 @@ const Submissions = () => {
                 <p className="m-0 border-b border-rule py-6 text-[14px] text-muted-ink md:mt-4">
                     {loading || !active ? "Loading submissions" : rows.length ? "No submissions match those filters." : "No submissions yet."}
                 </p>
-            ) : isDesktop ? (
+            ) : mode !== "list" ? (
                 <Table className="mt-4 table-fixed text-[15px]">
                     <colgroup>
-                        <col style={{ width: 116 }} />
+                        <col style={{ width: mode === "full" ? 116 : 96 }} />
                         <col />
-                        {showUser && <col style={{ width: 130 }} />}
-                        <col style={{ width: 142 }} />
-                        <col style={{ width: 200 }} />
-                        <col style={{ width: 56 }} />
-                        <col style={{ width: 120 }} />
-                        <col style={{ width: 174 }} />
+                        {showUser && <col style={{ width: 120 }} />}
+                        {mode === "full" && <col style={{ width: 142 }} />}
+                        <col style={{ width: mode === "full" ? 200 : 140 }} />
+                        <col style={{ width: mode === "full" ? 56 : 64 }} />
+                        <col style={{ width: mode === "full" ? 120 : 110 }} />
+                        <col style={{ width: mode === "full" ? 174 : 134 }} />
                     </colgroup>
                     <TableHeader>
                         <TableRow className="border-border hover:bg-transparent">
                             <SortHeader label="Submission" {...sortProps("id", "desc")} />
                             <SortHeader label="Problem" {...sortProps("problem")} />
                             {showUser && <StaticHeader label="By" />}
-                            <StaticHeader label="Language" />
+                            {mode === "full" && <StaticHeader label="Language" />}
                             <StaticHeader label="Verdict" />
                             <SortHeader label="Tests" align="right" {...sortProps("tests", "desc")} />
                             <SortHeader label="Runtime" align="right" {...sortProps("runtime")} />
@@ -334,7 +338,7 @@ const Submissions = () => {
                                     )}
                                 </TableCell>
                                 {showUser && <TableCell className="truncate px-1.5 py-0">{s.user}</TableCell>}
-                                <TableCell className="px-1.5 py-0 text-muted-ink">{lang(s)}</TableCell>
+                                {mode === "full" && <TableCell className="px-1.5 py-0 text-muted-ink">{lang(s)}</TableCell>}
                                 <TableCell className="px-1.5 py-0">
                                     <VerdictPill verdict={s.verdict} />
                                 </TableCell>
