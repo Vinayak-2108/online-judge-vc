@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
-import { SearchIcon } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { ArrowRightIcon, SearchIcon } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RoastMark, { RoastSwatch } from "../components/RoastMark";
+import Runtime from "../components/Runtime";
 import SortHeader, { PlainHeader, nextSort, type SortDir } from "../components/SortHeader";
 import StatusMark from "../components/StatusMark";
 import { get_all_questions } from "../controllers/QuestionRoutes";
@@ -20,8 +21,11 @@ type TabKey = "all" | "brew" | "solved";
 type RoastFilter = "all" | Roast;
 type SortKey = "name" | "roast" | "acceptance" | "best";
 
+/** Rows shown before "Show all N". */
+const CAP = 8;
+
 const ROAST_ITEMS: Record<RoastFilter, string> = {
-    all: "All roasts",
+    all: "Any roast",
     light: ROAST_LABEL.light,
     medium: ROAST_LABEL.medium,
     dark: ROAST_LABEL.dark,
@@ -50,6 +54,16 @@ function compare(a: Question, b: Question, key: SortKey, dir: SortDir): number {
     }
 }
 
+const SORT_CAPTION: Record<SortKey, [string, string]> = {
+    name: ["name, A to Z", "name, Z to A"],
+    roast: ["roast, light to dark", "roast, dark to light"],
+    acceptance: ["acceptance, low to high", "acceptance, high to low"],
+    best: ["your best time, fastest first", "your best time, slowest first"],
+};
+
+const WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+const word = (n: number) => WORDS[n] ?? String(n);
+
 function roastCounts(questions: Question[], me: Me | null) {
     const counts = {} as Record<Roast, { solved: number; total: number }>;
     for (const r of ["light", "medium", "dark"] as Roast[]) {
@@ -62,29 +76,50 @@ function roastCounts(questions: Question[], me: Me | null) {
     return counts;
 }
 
-function Finding({ questions, me, loggedIn }: { questions: Question[]; me: Me | null; loggedIn: boolean }) {
-    if (!questions.length) return null;
-    if (!loggedIn) return <>{questions.length} problems on the menu. Log in to keep track of what you have brewed.</>;
+/** The sentence under the title, generated from the caller's real data. */
+export function findingLine(questions: Question[], me: Me | null, loggedIn: boolean, phone = false): string {
+    if (!questions.length) return "";
+    if (!loggedIn) return `${questions.length} problems on the menu. Log in to keep track of what you have brewed.`;
+    const counts = roastCounts(questions, me);
     const solved = me ? me.solved : questions.filter((q) => statusOf(q) === "solved").length;
+    const head = `${solved} of ${questions.length} brewed.`;
+    const best = (list: Question[]) => [...list].sort((a, b) => (b.acceptance_rate ?? -1) - (a.acceptance_rate ?? -1))[0];
+
+    if (solved === questions.length) return `${head} Every problem on the menu is done.`;
+    if (solved === 0) {
+        const start = best(questions.filter((q) => q.difficulty === "light")) ?? best(questions);
+        return `${head} Start with ${start.name}${start.acceptance_rate != null ? ` (${formatPercent(start.acceptance_rate)} accepted)` : ""}.`;
+    }
+    // The darkest roast with nothing solved yet: point at its friendliest problem.
+    for (const roast of ["dark", "medium", "light"] as Roast[]) {
+        const inRoast = questions.filter((q) => q.difficulty === roast);
+        if (inRoast.length && counts[roast].solved === 0) {
+            const top = best(inRoast);
+            const pct = top.acceptance_rate != null ? ` (${formatPercent(top.acceptance_rate)})` : "";
+            if (inRoast.length === 1) return `${head} No ${roast} roasts yet: ${top.name} is the only one${pct}.`;
+            return phone
+                ? `${head} No ${roast} roasts yet: ${top.name} is the friendliest of the ${word(inRoast.length)}${pct}.`
+                : `${head} No ${roast} roasts yet: ${top.name} has the highest acceptance of the ${word(inRoast.length)}${pct}.`;
+        }
+    }
+    const attempted = questions.find((q) => statusOf(q) === "attempted");
+    if (attempted) return `${head} ${attempted.name} is attempted but not solved yet.`;
     const untouched = questions.find((q) => statusOf(q) === "new");
-    return (
-        <>
-            {solved} of {questions.length} brewed
-            {untouched ? ` · ${untouched.name} untouched` : " · nothing left on the menu"}
-        </>
-    );
+    return untouched ? `${head} ${untouched.name} is untouched.` : head;
 }
 
 const ProblemsList = () => {
     const { user, ready } = useAuth();
     const isDesktop = useIsDesktop();
+    const navigate = useNavigate();
     const [questions, setQuestions] = useState<Question[]>([]);
     const [me, setMe] = useState<Me | null>(null);
     const [loaded, setLoaded] = useState(false);
     const [tab, setTab] = useState<TabKey>("all");
     const [roast, setRoast] = useState<RoastFilter>("all");
     const [search, setSearch] = useState("");
-    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null);
+    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "acceptance", dir: "desc" });
+    const [showAll, setShowAll] = useState(false);
 
     useEffect(() => {
         if (!ready) return;
@@ -106,7 +141,7 @@ const ProblemsList = () => {
     const solvedCount = questions.length - toBrew;
     const continueWith = questions.find((q) => statusOf(q) === "attempted");
 
-    const visible = useMemo(() => {
+    const matches = useMemo(() => {
         const needle = search.trim().toLowerCase();
         const rows = questions.filter(
             (q) =>
@@ -114,9 +149,12 @@ const ProblemsList = () => {
                 (roast === "all" || q.difficulty === roast) &&
                 (!needle || q.name.toLowerCase().includes(needle)),
         );
-        if (sort) rows.sort((a, b) => compare(a, b, sort.key, sort.dir));
+        rows.sort((a, b) => compare(a, b, sort.key, sort.dir));
         return rows;
     }, [questions, tab, roast, search, sort]);
+
+    const visible = isDesktop && !showAll ? matches.slice(0, CAP) : matches;
+    const sortCaption = SORT_CAPTION[sort.key][sort.dir === "asc" ? 0 : 1];
 
     const counts = roastCounts(questions, me);
     const cells: { label: string; solved: number; total: number; swatch: Roast | null }[] = [
@@ -138,28 +176,46 @@ const ProblemsList = () => {
     };
 
     const sortProps = (key: SortKey, natural: SortDir = "asc") => ({
-        active: sort?.key === key,
-        dir: sort?.dir ?? "asc",
-        onSort: () => setSort((s) => (s ? nextSort(s, key, natural) : { key, dir: natural })),
+        active: sort.key === key,
+        dir: sort.dir,
+        onSort: () => setSort((s) => nextSort(s, key, natural)),
     });
 
+    const randomProblem = () => {
+        const pool = questions.filter((q) => statusOf(q) !== "solved");
+        const from = pool.length ? pool : questions;
+        const pick = from[Math.floor(Math.random() * from.length)];
+        if (pick) navigate(`/problems/${pick.slug}`);
+    };
+
+    const finding = findingLine(questions, me, !!user, !isDesktop);
+
     return (
-        <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-3.5 px-4 pt-4 pb-8 md:gap-5 md:px-8 md:pt-8">
-            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                <div>
-                    <h1 className="m-0 text-[22px] font-semibold tracking-[-0.01em] md:text-2xl">Problems</h1>
-                    <p className="mt-1 mb-0 text-[14px] leading-[1.45] text-muted-ink">
-                        <Finding questions={questions} me={me} loggedIn={!!user} />
-                    </p>
+        <div className="flex w-full flex-col gap-3.5 px-4 pt-4 pb-8 md:gap-0 md:px-8 md:pt-7">
+            <div className="flex flex-col gap-3 md:mb-[29px] md:flex-row md:items-start md:justify-between md:gap-6">
+                <div className="min-w-0">
+                    <h1 className="m-0 text-[22px] leading-8 font-semibold tracking-[-0.01em] md:text-2xl">Problems</h1>
+                    <p className="mt-1 mb-0 text-[14px] leading-[1.45] text-muted-ink">{finding}</p>
                 </div>
-                {continueWith && (
-                    <Link
-                        to={`/problems/${continueWith.slug}`}
-                        className="flex h-11 items-center justify-center rounded-control bg-primary px-4 text-[15px] font-medium text-primary-foreground no-underline hover:opacity-90 md:h-9 md:text-[14px]"
-                    >
-                        Continue {continueWith.name}
-                    </Link>
-                )}
+                <div className="flex shrink-0 gap-2 md:mt-2">
+                    {isDesktop && questions.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={randomProblem}
+                            className="h-9 rounded-control border border-control bg-sheet px-4 text-[14px] font-medium text-foreground hover:bg-raised"
+                        >
+                            Random problem
+                        </button>
+                    )}
+                    {continueWith && (
+                        <Link
+                            to={`/problems/${continueWith.slug}`}
+                            className="flex h-11 flex-1 items-center justify-center rounded-control bg-primary px-4 text-[15px] font-medium text-primary-foreground no-underline hover:opacity-90 md:h-9 md:flex-none md:text-[14px]"
+                        >
+                            Continue {continueWith.name}
+                        </Link>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-2 overflow-hidden rounded-card border border-border md:grid-cols-4" aria-label="Brewed by roast" role="group">
@@ -168,16 +224,17 @@ const ProblemsList = () => {
                     return (
                         <div
                             key={c.label}
-                            className={`flex flex-col gap-1.5 px-3.5 py-3 ${i % 2 ? "border-l" : ""} ${i > 1 ? "border-t" : ""} md:border-t-0 ${i > 0 ? "md:border-l" : "md:border-l-0"}`}
+                            className={`flex flex-col px-3.5 pt-3 pb-3 md:px-5 md:pt-[18px] md:pb-[19px] ${i % 2 ? "border-l" : ""} ${i > 1 ? "border-t" : ""} md:border-t-0 ${i > 0 ? "md:border-l" : "md:border-l-0"}`}
                         >
-                            <span className="flex items-center gap-1.5 text-[13px] text-muted-ink">
-                                {c.swatch ? <RoastSwatch roast={c.swatch} /> : <span className="inline-block h-3 w-2" aria-hidden />}
+                            <span className="flex items-center gap-2 text-[13px] leading-5 text-muted-ink md:text-[15px]">
+                                {c.swatch ? <RoastSwatch roast={c.swatch} /> : <span className="inline-block h-3 w-2 md:hidden" aria-hidden />}
                                 {c.label}
                             </span>
-                            <span className="text-[14px] text-muted-ink tabular-nums">
-                                <span className="text-[22px] font-medium text-foreground">{c.solved}</span> of {c.total}
+                            <span className="mt-1.5 text-[14px] text-muted-ink tabular-nums md:text-[15px]">
+                                <span className="text-[22px] font-medium text-foreground md:text-2xl">{c.solved}</span> of {c.total}
+                                {isDesktop && " solved"}
                             </span>
-                            <span className="h-1 rounded-[2px] bg-raised" aria-hidden>
+                            <span className="mt-1.5 h-1 rounded-[2px] bg-raised md:mt-[5px]" aria-hidden>
                                 <span
                                     className={`block h-1 rounded-[2px] ${BAR[c.swatch ?? "all"]}`}
                                     style={{ width: `${pct}%` }}
@@ -188,91 +245,118 @@ const ProblemsList = () => {
                 })}
             </div>
 
-            <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)}>
-                <TabsList variant="line" aria-label="Filter problems" className="w-full justify-start gap-[22px] border-b border-border">
-                    <TabsTrigger value="all" className="flex-none px-0">
+            <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="md:mt-5">
+                <TabsList aria-label="Filter problems" className="gap-6 md:h-10">
+                    <TabsTrigger value="all" className="md:h-10 md:text-[15px]">
                         All <span className="font-normal text-muted-ink tabular-nums">{questions.length}</span>
                     </TabsTrigger>
-                    <TabsTrigger value="brew" className="flex-none px-0">
+                    <TabsTrigger value="brew" className="md:h-10 md:text-[15px]">
                         To brew <span className="font-normal text-muted-ink tabular-nums">{toBrew}</span>
                     </TabsTrigger>
-                    <TabsTrigger value="solved" className="flex-none px-0">
+                    <TabsTrigger value="solved" className="md:h-10 md:text-[15px]">
                         Solved <span className="font-normal text-muted-ink tabular-nums">{solvedCount}</span>
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
 
-            <div className="flex items-center gap-2">
-                <div className="relative min-w-0 flex-1 md:max-w-xs">
-                    <SearchIcon
-                        className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-ink"
-                        aria-hidden
-                    />
-                    <Input
-                        type="search"
-                        aria-label="Search problems"
-                        placeholder="Search problems"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="h-9 pl-8 text-[14px]"
-                    />
+            {isDesktop && (
+                <div className="mt-4 flex items-center gap-3">
+                    <div className="relative w-[299px]">
+                        <SearchIcon
+                            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-foreground"
+                            strokeWidth={2.25}
+                            aria-hidden
+                        />
+                        <Input
+                            type="search"
+                            aria-label="Filter by name"
+                            placeholder="Filter by name"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="h-[34px] pl-9 text-[15px]"
+                        />
+                    </div>
+                    <Select<RoastFilter> value={roast} onValueChange={(v) => setRoast(v ?? "all")} items={ROAST_ITEMS}>
+                        <SelectTrigger aria-label="Filter by roast" className="h-[34px] w-[149px] bg-sheet text-[15px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {(Object.keys(ROAST_ITEMS) as RoastFilter[]).map((key) => (
+                                <SelectItem key={key} value={key}>
+                                    {ROAST_ITEMS[key]}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <p className="m-0 ml-auto text-[14px] text-muted-ink">
+                        {matches.length} {matches.length === 1 ? "problem" : "problems"} {"·"} Sorted by {sortCaption}
+                    </p>
                 </div>
-                <Select<RoastFilter> value={roast} onValueChange={(v) => setRoast(v ?? "all")} items={ROAST_ITEMS}>
-                    <SelectTrigger aria-label="Filter by roast" className="h-9 w-[150px] bg-sheet">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {(Object.keys(ROAST_ITEMS) as RoastFilter[]).map((key) => (
-                            <SelectItem key={key} value={key}>
-                                {ROAST_ITEMS[key]}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+            )}
 
             {!loaded ? (
                 <p className="m-0 py-6 text-[14px] text-muted-ink">Loading the menu</p>
-            ) : visible.length === 0 ? (
-                <p className="m-0 border-b border-rule py-6 text-[14px] text-muted-ink">
+            ) : matches.length === 0 ? (
+                <p className="m-0 border-b border-rule py-6 text-[14px] text-muted-ink md:mt-4">
                     {questions.length ? "No problems match those filters." : "The menu is empty."}
                 </p>
             ) : isDesktop ? (
-                <Table className="text-[14px]">
-                    <TableHeader>
-                        <TableRow className="border-border hover:bg-transparent">
-                            <PlainHeader label="Status" className="w-10" />
-                            <SortHeader label="Problem" {...sortProps("name")} />
-                            <SortHeader label="Roast" {...sortProps("roast")} />
-                            <SortHeader label="Acceptance" align="right" {...sortProps("acceptance", "desc")} />
-                            <SortHeader label="Your best" align="right" {...sortProps("best")} />
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {visible.map((q) => (
-                            <TableRow key={q.id} className="border-rule hover:bg-raised">
-                                <TableCell className="w-10 pl-3">
-                                    <StatusMark status={statusOf(q)} />
-                                </TableCell>
-                                <TableCell className="px-2 py-3">
-                                    <Link
-                                        to={`/problems/${q.slug}`}
-                                        className="rounded-control font-medium text-foreground no-underline hover:underline"
-                                    >
-                                        {q.name}
-                                    </Link>
-                                </TableCell>
-                                <TableCell className="px-2">
-                                    <RoastMark roast={q.difficulty} />
-                                </TableCell>
-                                <TableCell className="px-2 text-right tabular-nums">{formatPercent(q.acceptance_rate)}</TableCell>
-                                <TableCell className="px-2 text-right font-code text-[13px] tabular-nums">
-                                    {formatRuntime(q.best_runtime_ms)}
-                                </TableCell>
+                <>
+                    <Table className="mt-4 table-fixed text-[15px]">
+                        <colgroup>
+                            <col style={{ width: 40 }} />
+                            <col />
+                            <col style={{ width: 206 }} />
+                            <col style={{ width: 128 }} />
+                            <col style={{ width: 128 }} />
+                        </colgroup>
+                        <TableHeader>
+                            <TableRow className="border-border hover:bg-transparent">
+                                <PlainHeader label="Status" />
+                                <SortHeader label="Problem" {...sortProps("name")} />
+                                <SortHeader label="Roast" {...sortProps("roast")} />
+                                <SortHeader label="Acceptance" align="right" {...sortProps("acceptance", "desc")} />
+                                <SortHeader label="Your best" align="right" {...sortProps("best")} />
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {visible.map((q) => (
+                                <TableRow key={q.id} className="h-12 border-rule hover:bg-raised">
+                                    <TableCell className="py-0 pr-0 pl-0.5">
+                                        <StatusMark status={statusOf(q)} />
+                                    </TableCell>
+                                    <TableCell className="px-1.5 py-0">
+                                        <Link
+                                            to={`/problems/${q.slug}`}
+                                            className="rounded-control text-foreground no-underline hover:underline"
+                                        >
+                                            {q.name}
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell className="px-1.5 py-0">
+                                        <RoastMark roast={q.difficulty} />
+                                    </TableCell>
+                                    <TableCell className="px-1.5 py-0 text-right tabular-nums">
+                                        {formatPercent(q.acceptance_rate)}
+                                    </TableCell>
+                                    <TableCell className="px-1.5 py-0 text-right">
+                                        <Runtime text={formatRuntime(q.best_runtime_ms)} />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    {matches.length > CAP && !showAll && (
+                        <button
+                            type="button"
+                            onClick={() => setShowAll(true)}
+                            className="mt-3 inline-flex h-5 w-fit items-center gap-2 rounded-control text-[15px] text-brand"
+                        >
+                            Show all {matches.length}
+                            <ArrowRightIcon className="size-4" strokeWidth={2.5} aria-hidden />
+                        </button>
+                    )}
+                </>
             ) : (
                 <ul className="m-0 -mt-1.5 list-none p-0">
                     {visible.map((q) => {
@@ -289,15 +373,15 @@ const ProblemsList = () => {
                             <li key={q.id}>
                                 <Link
                                     to={`/problems/${q.slug}`}
-                                    className="flex items-center gap-3 border-b border-rule py-2.5 text-foreground no-underline"
+                                    className="flex items-center gap-3 border-b border-rule py-[7px] text-foreground no-underline"
                                 >
-                                    <StatusMark status={status} />
+                                    <StatusMark status={status} phone />
                                     <span className="min-w-0 flex-1">
-                                        <span className="flex justify-between gap-2 text-[15px]">
+                                        <span className="flex justify-between gap-2 text-[15px] leading-5">
                                             <span className="font-medium">{q.name}</span>
                                             <span className="tabular-nums">{formatPercent(q.acceptance_rate)}</span>
                                         </span>
-                                        <span className="mt-0.5 block text-[13px] text-muted-ink">
+                                        <span className="block text-[13px] leading-[18px] text-muted-ink">
                                             {ROAST_LABEL[q.difficulty]} · {best}
                                         </span>
                                     </span>
