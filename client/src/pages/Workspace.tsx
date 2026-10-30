@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import CodeMirror from "@uiw/react-codemirror";
+import { EditorView } from "@codemirror/view";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
 import { python } from "@codemirror/lang-python";
@@ -196,7 +197,7 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
         );
     return (
         <div
-            className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-card bg-raised px-4 py-3 text-[15px]"
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-card bg-raised px-4 py-3 text-[14px]"
             aria-label="Latest submission"
             data-testid="ticket"
         >
@@ -314,7 +315,10 @@ const Workspace = () => {
         setEdit({ key, code: STARTER[lang], at: null });
     };
 
-    const extensions = useMemo(() => [lang === "py" ? python() : lang === "java" ? java() : cpp()], [lang]);
+    const extensions = useMemo(
+        () => [lang === "py" ? python() : lang === "java" ? java() : cpp(), EditorView.lineWrapping],
+        [lang],
+    );
 
     const needCode = (): boolean => {
         if (!user) {
@@ -520,7 +524,7 @@ const Workspace = () => {
                     </Link>
                     <h1 className="m-0 min-w-0 flex-1 truncate text-[17px] leading-6 font-semibold">{q.name}</h1>
                     <span className="shrink-0 text-[14px] text-foreground">
-                        <RoastMark roast={q.difficulty} short />
+                        <RoastMark roast={q.difficulty} />
                     </span>
                 </header>
                 <div className="px-4 pt-3">

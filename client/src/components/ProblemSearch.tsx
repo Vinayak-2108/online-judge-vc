@@ -63,9 +63,9 @@ const ProblemSearch = ({ variant }: Props) => {
     useEffect(() => {
         const onKey = (e: globalThis.KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-                // only the visible instance reacts
-                if (variant === "bar" && !inputRef.current?.offsetParent) return;
-                if (variant === "icon" && window.matchMedia?.("(min-width: 768px)").matches) return;
+                // only the instance that is on screen reacts
+                const wide = window.matchMedia?.("(min-width: 768px)").matches ?? true;
+                if ((variant === "bar") !== wide) return;
                 e.preventDefault();
                 ensureLoaded();
                 setOpen(true);
