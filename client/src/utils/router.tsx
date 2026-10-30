@@ -1,13 +1,14 @@
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router";
 
 import AppShell from "../components/AppShell";
+import NotFound from "../components/NotFound";
 import { AuthProvider } from "../lib/auth";
 import Home from "../pages/Home";
 import ProblemsList from "../pages/ProblemsList";
-import Problem from "../pages/Problem";
+import Workspace from "../pages/Workspace";
 import Submissions from "../pages/Submissions";
 import About from "../pages/About";
-import Signup from "../pages/Signup";
+import SignIn from "../pages/SignIn";
 
 export function AppRoutes() {
     return (
@@ -15,11 +16,14 @@ export function AppRoutes() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/signup" element={<Signup />} />
+                <Route path="/signin" element={<SignIn />} />
+                {/* the old address: /signup opens the sign-up form, anything else about it is the same page */}
+                <Route path="/signup" element={<Navigate to="/signin?mode=signup" replace />} />
                 <Route element={<AppShell />}>
                     <Route path="/problems" element={<ProblemsList />} />
-                    <Route path="/problems/:slug" element={<Problem />} />
+                    <Route path="/problems/:slug" element={<Workspace />} />
                     <Route path="/submissions" element={<Submissions />} />
+                    <Route path="*" element={<NotFound />} />
                 </Route>
             </Routes>
         </AuthProvider>

@@ -22,7 +22,7 @@ TARGETS = {
     'sum-of-two-numbers': 92.4, 'count-the-vowels': 88.1, 'reverse-a-string': 81.7,
     'prime-sieve-up-to-n': 79.6, 'second-largest-in-an-array': 74.9, 'balanced-brackets': 63.5,
     'longest-common-prefix': 61.0, 'merge-two-sorted-lists': 58.2, 'rotate-an-array': 55.0,
-    'coin-change': 49.0, 'longest-increasing-subsequence': 47.5, 'nth-fibonacci': 46.3,
+    'coin-change': 41.0, 'longest-increasing-subsequence': 38.5, 'nth-fibonacci': 46.3,
 }
 
 # (problem slug, verdict, language, passed, runtime_ms, minutes ago) for riya_s, newest first
@@ -63,7 +63,7 @@ class Command(BaseCommand):
             q = questions.get(slug)
             if not q:
                 continue
-            total = 40
+            total = 100
             accepted = round(total * target / 100)
             verdicts = ['Accepted'] * accepted + ['Wrong Answer on tc 2'] * (total - accepted)
             rng.shuffle(verdicts)
