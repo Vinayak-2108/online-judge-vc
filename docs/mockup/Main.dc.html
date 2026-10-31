@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Code Cafe: landing page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap"> <!-- taste-skill-ignore: Plex Mono loads only for code and code input -->
+<style>
+body{margin:0}
+.cc[data-theme="light"]{--frame:#f7f5f2;--sheet:#ffffff;--raised:#f4f2ee;--border:#ebe8e3;--control:#d4d0c9;--text:#1a1612;--muted:#615a52;--accent:#c45200;--accent-fill:#f86f03;--on-accent:#1a1612;--primary:#1a1612;--on-primary:#ffffff;--field:#1a1612;--on-field:#ffffff;--card:#ffffff;--code:#fbfaf8;--kw:#c45200;--roast-light:#b3845a;--roast-medium:#8b5a2b;--roast-dark:#3b2414;--roast-light-ink:#1a1612;--roast-medium-ink:#ffffff;--roast-dark-ink:#ffffff;--pos:#247b50;--pos-bg:#dcfae5;--neg:#c4242a;--neg-bg:#ffedea;--paper:#ffffff;--paper-ink:#1a1612}
+.cc[data-theme="dark"]{--frame:#0d0d0d;--sheet:#141414;--raised:#1e1e1e;--border:#262626;--control:#3d3d3d;--text:#f5f3ef;--muted:#b4b0aa;--accent:#ff8a2a;--accent-fill:#ff8a2a;--on-accent:#141414;--primary:#f5f3ef;--on-primary:#1a1612;--field:#0d0d0d;--on-field:#f5f3ef;--card:#1e1e1e;--code:#0f0f0f;--kw:#ff8a2a;--roast-light:#d9b48f;--roast-medium:#a8723f;--roast-dark:#8a5a36;--roast-light-ink:#141414;--roast-medium-ink:#141414;--roast-dark-ink:#ffffff;--pos:#3fc07a;--pos-bg:#172a1d;--neg:#e5566f;--neg-bg:#2c1a20;--paper:#ece8e1;--paper-ink:#1a1612}
+.cc{font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.cc a{color:var(--accent)} .cc a:hover{color:var(--text)}
+.cc :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.display{font-family:'Archivo',sans-serif;font-stretch:62%;font-weight:800;text-transform:uppercase;line-height:.88;letter-spacing:-.01em;margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums} /* taste-skill-ignore: monospace only on code */
+.num{font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:0;border:1px solid transparent;font:500 15px/1 'Archivo',sans-serif;text-decoration:none;cursor:pointer;transition:transform .16s ease,background-color .16s ease} /* taste-skill-ignore: secondary button border is a real control */
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(1px)}
+.btn-accent{background:var(--accent-fill);color:var(--on-accent);height:52px;padding:0 28px;font-size:17px}
+.cc a.btn-accent:hover{color:var(--on-accent)}
+.btn-primary{background:var(--primary);color:var(--on-primary)}
+.btn-secondary{background:var(--sheet);color:var(--text);border-color:var(--control)}
+.ui .btn{border-radius:6px;height:36px;padding:0 16px;font-size:14px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:12px;min-height:900px;box-sizing:border-box}
+.how-row{transition:transform .32s cubic-bezier(.2,.7,.2,1)}
+.deck .card{transition:flex-basis .36s cubic-bezier(.2,.7,.2,1)}
+.deck .card:hover .solve{text-decoration:underline}
+.cta-card{position:absolute;right:6%;bottom:-60px;width:min(44vw,640px);aspect-ratio:7/5;transform:rotate(2deg)}
+.foot-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px}
+.slips{display:flex}
+@media (max-width:860px){
+.hero{grid-template-columns:1fr;min-height:0}
+.room{padding:32px 16px !important}
+.how{padding:96px 16px !important}
+.how-col{width:72vw !important}
+.how-nav{display:none !important}
+.menu{padding:96px 16px !important}
+.deck{flex-direction:column !important;height:auto !important;gap:12px}
+.deck .card{flex:none !important;width:100% !important}
+.deck .card .inner{width:auto !important}
+.showcase{height:auto !important;min-height:100svh}
+.scrim{left:16px !important;right:16px !important;width:auto !important;top:80px !important}
+.slips{overflow-x:auto}
+.slips .slip{flex:0 0 30vw !important}
+.cta{padding:96px 16px 0 !important;min-height:0 !important}
+.cta-card{position:relative;right:auto;bottom:-40px;width:90%;margin:48px auto 0;transform:rotate(1deg)}
+.cta-copy{position:static !important;max-width:none !important}
+.foot-panel{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.btn,.how-row,.deck .card{transition:none}}
+</style>
+</helmet>
+<div class="cc" data-theme="{{theme}}" style="background: var(--field); color: var(--text);">
+
+<!-- ===== HERO: the menu card beside the live editor ===== -->
+<section class="hero" aria-label="Code Cafe">
+  <div style="background: var(--sheet); display: flex; flex-direction: column; align-items: center; overflow: hidden; min-width: 0;">
+    <div aria-hidden="true" style="display: flex; align-self: stretch; height: 56px; overflow: hidden;">
+      <sc-for list="{{stripes}}" as="s" hint-placeholder-count="30">
+        <span style="flex: 0 0 28px; height: 56px; background: {{s.bg}};"></span>
+      </sc-for>
+    </div>
+    <div style="align-self: stretch; display: flex; justify-content: flex-end; padding: 20px 32px 0;">
+      <button type="button" onClick="{{toggleTheme}}" aria-label="{{themeLabel}}" style="display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 8px; cursor: pointer; color: var(--text);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" style="opacity: {{sunOpacity}};"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"></path></svg>
+        <span style="width: 36px; height: 20px; border-radius: 999px; background: var(--control); position: relative; display: inline-block;"><span style="position: absolute; top: 3px; left: {{knobLeft}}px; width: 14px; height: 14px; border-radius: 999px; background: var(--sheet); transition: left .16s ease;"></span></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" style="opacity: {{moonOpacity}};"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+      </button>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 32px 48px;">
+      <div style="display: flex; align-items: center; gap: 12px; color: var(--text);">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2M14 2v2M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></svg>
+        <span class="display" style="font-size: 40px;">Code Cafe</span>
+      </div>
+      <h1 class="display" style="font-size: clamp(60px, 7vw, 108px); margin-top: 44px;">Solve it while<br>it is still hot</h1>
+      <p style="max-width: 36ch; font-size: 19px; line-height: 1.5; margin: 32px 0 0;">An online judge for C, C++, Python and Java. Pick a problem off the menu, write your solution, and get a verdict in seconds.</p>
+      <a class="btn btn-accent" href="#menu" style="margin-top: 32px;">See today’s menu</a>
+    </div>
+    <nav aria-label="On this page" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 32px; padding: 0 24px 28px; font-size: 15px; font-weight: 500;">
+      <a href="#how" style="color: var(--text);">How a run works</a>
+      <a href="#menu" style="color: var(--text);">The menu</a>
+      <a href="#signin" style="color: var(--text);">Sign in</a>
+    </nav>
+  </div>
+
+  <div class="room ui" data-ui="editor" style="background: var(--raised); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 48px 32px; min-width: 0;">
+    <div style="width: 100%; max-width: 560px; background: var(--code); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+      <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px 0; background: var(--sheet); flex-wrap: wrap;">
+        <span style="font-size: 16px; font-weight: 600;">Sum of Two Numbers</span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px;"><span style="width: 10px; height: 14px; border-radius: 2px; background: var(--roast-light);"></span>Light roast</span>
+      </div>
+      <div role="tablist" aria-label="Language" style="display: flex; gap: 20px; padding: 10px 18px 0; background: var(--sheet); border-bottom: 1px solid var(--border); font-size: 14px;"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+        <span style="padding-bottom: 10px; color: var(--muted);">C</span>
+        <span style="padding-bottom: 10px; color: var(--muted);">C++</span>
+        <span role="tab" aria-selected="true" style="padding-bottom: 8px; font-weight: 500; border-bottom: 2px solid var(--accent);">Python</span>
+        <span style="padding-bottom: 10px; color: var(--muted);">Java</span>
+      </div>
+      <pre class="mono" style="margin: 0; padding: 16px 18px; font-size: 13px; line-height: 1.7; color: var(--text); overflow-x: auto;"><span style="color: var(--muted);">1  </span><span style="color: var(--kw);">import</span> sys
+<span style="color: var(--muted);">2  </span>
+<span style="color: var(--muted);">3  </span>a, b = <span style="color: var(--kw);">map</span>(<span style="color: var(--kw);">int</span>, sys.stdin.read().split())
+<span style="color: var(--muted);">4  </span><span style="color: var(--kw);">print</span>(a + b)</pre>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: var(--sheet); border-top: 1px solid var(--border); flex-wrap: wrap;"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+        <label for="hero-input" style="font-size: 14px; color: var(--muted);">Input</label>
+        <input id="hero-input" class="mono" value="{{input}}" onChange="{{onInput}}" style="width: 120px; height: 36px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--control); border-radius: 6px; background: var(--sheet); color: var(--text); font-size: 13px;"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+        <span style="flex: 1;"></span>
+        <button type="button" class="btn btn-secondary" onClick="{{run}}">Run</button>
+        <button type="button" class="btn btn-primary" onClick="{{submit}}">Submit</button>
+      </div>
+      <sc-if value="{{hasOut}}" hint-placeholder-val="{{true}}">
+        <div style="padding: 12px 18px 14px; background: var(--sheet); border-top: 1px solid var(--border);"> <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+          <div style="font-size: 13px; color: var(--muted);">Output</div>
+          <div class="mono" style="font-size: 13px; margin-top: 4px; color: {{outColor}};">{{outText}}</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">{{outNote}}</div>
+        </div>
+      </sc-if>
+    </div>
+    <div aria-live="polite" style="width: 300px; max-width: 100%; background: var(--paper); color: var(--paper-ink); padding: 18px 20px 20px; transform: rotate(-2deg); box-sizing: border-box; font-size: 15px; line-height: 1.6;">
+      <div style="font-weight: 700;">Submission {{ticket.id}}</div>
+      <div aria-hidden="true" style="color: #615a52; letter-spacing: .1em;">- - - - - - - - - - - - - - - -</div>
+      <div>Sum of Two Numbers</div>
+      <div>Python 3.8</div>
+      <div style="display: flex; justify-content: space-between;"><span>{{ticket.verdict}}</span><span class="num">{{ticket.tests}}</span></div>
+      <div style="display: flex; justify-content: space-between;"><span>Run time</span><span class="num">{{ticket.time}}</span></div>
+    </div>
+    <p style="margin: 0; font-size: 15px; color: var(--muted);">Change the input, then press Run or Submit.</p>
+  </div>
+</section>
+
+<!-- ===== HOW A RUN WORKS: drag row of moments ===== -->
+<section id="how" class="how" style="background: var(--sheet); padding: 160px 32px; overflow: hidden;">
+  <div style="display: flex; align-items: flex-end; gap: 8px;">
+    <h2 class="display" style="font-size: 64px; flex: 1;">How a run works</h2>
+    <div class="how-nav" style="display: flex; gap: 8px;">
+      <button type="button" onClick="{{prev}}" aria-label="Previous moment" style="width: 48px; height: 48px; border: 0; background: var(--raised); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <button type="button" onClick="{{next}}" aria-label="Next moment" style="width: 48px; height: 48px; border: 0; background: var(--primary); color: var(--on-primary); cursor: pointer; display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></button>
+    </div>
+  </div>
+  <div aria-hidden="true" style="height: 6px; background: var(--raised); margin-top: 20px;"><div style="height: 6px; width: {{progress}}%; background: var(--text); transition: width .32s ease;"></div></div>
+  <div class="how-row" style="display: flex; gap: 32px; padding-top: 28px; transform: translateX(-{{offset}}px);">
+    <div class="how-col" style="flex: none; width: 280px;">
+      <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Take a seat</h3>
+      <p style="margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: var(--muted);">Sign in and pick a problem from the menu. Each one shows its roast and how many people got it right.</p>
+      <div style="height: 96px;"></div>
+      <img src="/_blob/af958150b519649735c9e51117fd5c98" alt="An empty coffee-house room with a counter and a fireplace, drawn in grey wash by James Miller" width="280" height="350" style="width: 280px; height: 350px; object-fit: cover; display: block;">
+    </div>
+    <div class="how-col" style="flex: none; width: 280px;">
+      <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Read the problem</h3>
+      <p style="margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: var(--muted);">The statement, two worked examples and the limits, all on one page beside the editor.</p>
+      <div style="height: 140px;"></div>
+      <div class="ui" data-ui="statement" style="width: 280px; height: 350px; box-sizing: border-box; background: var(--raised); padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+        <div style="font-size: 16px; font-weight: 600;">Balanced Brackets</div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;"><span style="width: 10px; height: 14px; border-radius: 2px; background: var(--roast-medium);"></span>Medium roast</div>
+        <div style="font-size: 14px; line-height: 1.45;">Read a string of ( ) [ ] { } and print YES if every bracket is closed in the right order, otherwise NO.</div>
+        <div style="background: var(--sheet); border-radius: 6px; padding: 10px 12px; font-size: 13px; line-height: 1.6;"><div style="color: var(--muted);">Input</div><div class="mono">([]{})</div><div style="color: var(--muted);">Output</div><div class="mono">YES</div></div>
+      </div>
+    </div>
+    <div class="how-col" style="flex: none; width: 280px;">
+      <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Write it your way</h3>
+      <p style="margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: var(--muted);">C, C++, Python or Java. Your draft is saved as you type, so a closed tab costs nothing.</p>
+      <div style="height: 80px;"></div>
+      <pre class="mono ui" data-ui="code" style="width: 280px; height: 350px; box-sizing: border-box; margin: 0; background: var(--code); border: 1px solid var(--border); padding: 18px 14px; font-size: 12px; line-height: 1.75; overflow: hidden; color: var(--text);">stack = [] <!-- taste-skill-ignore: inside the data-ui editor fragment -->
+pairs = {')': '(', ']': '['}
+<span style="color: var(--kw);">for</span> ch <span style="color: var(--kw);">in</span> input().strip():
+    <span style="color: var(--kw);">if</span> ch <span style="color: var(--kw);">in</span> '([{':
+        stack.append(ch)
+    <span style="color: var(--kw);">elif not</span> stack:
+        <span style="color: var(--kw);">print</span>('NO')
+        <span style="color: var(--kw);">break</span></pre>
+    </div>
+    <div class="how-col" style="flex: none; width: 280px;">
+      <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Run it on your input</h3>
+      <p style="margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: var(--muted);">Try your own case first. The output and the run time come back in a second or two.</p>
+      <div style="height: 124px;"></div>
+      <div class="ui" data-ui="run" style="width: 280px; height: 350px; box-sizing: border-box; background: var(--raised); padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: var(--sheet); border-radius: 6px; padding: 12px 14px; font-size: 13px; line-height: 1.6;"><div style="color: var(--muted);">Your input</div><div class="mono">([)]</div></div>
+        <div style="background: var(--sheet); border-radius: 6px; padding: 12px 14px; font-size: 13px; line-height: 1.6;"><div style="color: var(--muted);">Output</div><div class="mono">NO</div><div style="color: var(--muted);">Ran in 0.012 s</div></div>
+      </div>
+    </div>
+    <div class="how-col" style="flex: none; width: 280px;">
+      <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Submit for judging</h3>
+      <p style="margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: var(--muted);">Every hidden test runs in a sandbox. The first failing test is the one you are told about.</p>
+      <div style="height: 104px;"></div>
+      <div class="ui" data-ui="tests" style="width: 280px; height: 350px; box-sizing: border-box; background: var(--raised); padding: 20px; font-size: 14px;">
+        <div style="font-weight: 500; margin-bottom: 8px;">Judging 12 test cases</div>
+        <sc-for list="{{tests}}" as="tc" hint-placeholder-count="8">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 5px 0;">
+            <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 999px; background: {{tc.dot}};"></span>
+            <span style="flex: 1;">Test {{tc.n}}</span>
+            <span class="num" style="color: {{tc.color}};">{{tc.result}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div class="how-col" style="flex: none; width: 280px;">
+      <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Read the ticket</h3>
+      <p style="margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: var(--muted);">Verdict, tests passed and run time, printed like a till slip and kept in your submissions.</p>
+      <div style="height: 132px;"></div>
+      <div style="width: 280px; height: 350px; box-sizing: border-box; background: var(--raised); display: flex; align-items: center; justify-content: center;">
+        <div style="width: 228px; background: var(--paper); color: var(--paper-ink); padding: 16px 18px; transform: rotate(2deg); font-size: 15px; line-height: 1.6;">
+          <div style="font-weight: 700;">Submission #1051</div>
+          <div aria-hidden="true" style="color: #615a52; letter-spacing: .1em;">- - - - - - - - - - - -</div>
+          <div>Balanced Brackets</div><div>Python 3.8</div>
+          <div style="display: flex; justify-content: space-between;"><span>Wrong answer</span><span class="num">7 of 12</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>Run time</span><span class="num">0.031 s</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ON THE MENU: cards that fold into spines ===== -->
+<section id="menu" class="menu" style="background: var(--frame); padding: 160px 32px;">
+  <h2 class="display" style="font-size: 64px;">On the menu</h2>
+  <div class="deck" style="display: flex; height: 360px; overflow: hidden; margin-top: 40px;">
+    <sc-for list="{{deck}}" as="item" hint-placeholder-count="5">
+      <button type="button" class="card" onClick="{{item.pick}}" aria-expanded="{{item.expanded}}" style="flex: {{item.flex}}; min-width: 0; overflow: hidden; border: 0; padding: 0; text-align: left; cursor: pointer; background: var(--roast-{{item.roast}}); color: var(--roast-{{item.roast}}-ink); font: inherit;">
+        <div class="inner" style="width: 556px; height: 360px; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: -.01em;">{{item.name}}</span>
+          <span style="font-size: 16px; line-height: 1.5; max-width: 46ch;">{{item.excerpt}}</span>
+          <span style="flex: 1;"></span>
+          <span style="display: flex; justify-content: space-between; gap: 16px; font-size: 16px;"><span>{{item.label}} roast · {{item.acc}} accepted</span><span class="solve" style="font-weight: 600;">Solve it</span></span>
+        </div>
+      </button>
+    </sc-for>
+  </div>
+  <p style="margin: 48px 0 0; font-size: 17px; display: flex; flex-wrap: wrap; gap: 8px;">12 problems on the menu: 4 light, 5 medium, 3 dark roast. <a href="#menu" style="font-weight: 600;">See the full menu</a></p>
+</section>
+
+<!-- ===== SHOWCASE: output slips along the edge ===== -->
+<section class="showcase" style="position: relative; height: 900px; overflow: hidden; background: #111;">
+  <img src="/_blob/c90e140cc105b9f39306a84b55cc6147" alt="Students and regulars reading and talking at tables in the Indian Coffee House, College Street, Kolkata" width="1920" height="1440" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 70%;">
+  <div class="scrim" style="position: absolute; left: 18%; top: 112px; width: min(600px, 70%); background: rgba(12,10,8,.72); color: #ffffff; padding: 36px 40px;">
+    <h2 class="display" style="font-size: 56px;">Argued over at a table</h2>
+    <p style="margin: 20px 0 0; font-size: 22px; line-height: 1.45;">Coffee houses have always been where people bring a hard problem and argue it out. Code Cafe keeps the table and adds a judge that never gets tired.</p>
+    <p style="margin: 16px 0 0; font-size: 22px; line-height: 1.45;">Every run prints a slip. These six came in this week.</p>
+  </div>
+  <p style="position: absolute; top: 24px; left: 32px; margin: 0; font-size: 13px; color: #ffffff; background: rgba(12,10,8,.72); padding: 6px 10px;">Indian Coffee House, College Street, Kolkata</p>
+  <div class="slips" style="position: absolute; left: 12px; right: 12px; bottom: -48px; gap: 12px; align-items: flex-end;">
+    <sc-for list="{{slips}}" as="sl" hint-placeholder-count="6">
+      <div class="slip" style="flex: 1; min-width: 0; height: {{sl.h}}px; background: #ffffff; color: #1a1612; padding: 18px 18px 0; box-sizing: border-box; transform: rotate({{sl.tilt}}deg); font-size: 15px; line-height: 1.6;">
+        <div style="font-weight: 700;">Submission {{sl.id}}</div>
+        <div aria-hidden="true" style="color: #615a52; letter-spacing: .1em;">- - - - - - - - - -</div>
+        <div>{{sl.problem}}</div>
+        <div>{{sl.lang}}</div>
+        <div>{{sl.verdict}}</div>
+        <div class="num">{{sl.tests}}</div>
+        <div class="num">{{sl.time}}</div>
+        <div style="color: #615a52;">{{sl.when}}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ===== CTA: the reply card ===== -->
+<section id="signin" class="cta" style="position: relative; min-height: 760px; overflow: hidden; background: var(--field); color: var(--on-field); padding: 0 32px;">
+  <p class="cta-copy" style="position: absolute; left: 32px; bottom: 64px; max-width: 30%; margin: 0; font-size: 22px; line-height: 1.45;">Free to use. No card, nothing to install. Your code runs in Judge0’s sandbox, never on our server.</p>
+  <div class="cta-card" style="background: var(--card); color: var(--text); box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 16px;">
+    <h2 class="display" style="font-size: 44px;">Your table is ready</h2>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; max-width: 40ch;">Make an account and the first problem is waiting: Sum of Two Numbers, a light roast with three friendly tests.</p>
+    <a class="btn btn-primary" href="#signin" style="align-self: stretch; height: 56px; font-size: 16px; margin-top: 16px;">Create an account</a>
+    <p style="margin: 0; font-size: 15px; color: var(--muted);">Already have one? <a href="#signin" style="font-weight: 600;">Sign in</a></p>
+  </div>
+</section>
+
+<!-- ===== FOOTER: the back of the card ===== -->
+<footer style="background: var(--field); padding: 120px 16px 48px;">
+  <div style="max-width: 1200px; margin: 0 auto;">
+    <div aria-hidden="true" style="display: flex; height: 50px; overflow: hidden;">
+      <sc-for list="{{scallops}}" as="sc" hint-placeholder-count="12">
+        <span style="flex: 0 0 100px; height: 100px; border-radius: 999px; background: var(--sheet);"></span>
+      </sc-for>
+    </div>
+    <div style="background: var(--sheet); color: var(--text); padding: 48px 56px 32px;">
+      <div class="foot-panel">
+        <div>
+          <h2 class="display" style="font-size: 44px;">See you at the counter</h2>
+          <p style="margin: 20px 0 0; font-size: 17px; line-height: 1.55; max-width: 42ch;">Code Cafe is open source. Found a wrong test case or a bug in the judge? Tell us on GitHub and it gets fixed.</p>
+        </div>
+        <div style="display: flex; justify-content: space-between; gap: 24px;">
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 18px;">
+            <li><a href="#menu">Problems</a></li>
+            <li><a href="#signin">Your submissions</a></li>
+            <li><a href="https://github.com/Vinayak-2108/online-judge-vc">GitHub: Vinayak-2108/online-judge-vc</a></li>
+            <li><a href="#how">How a run works</a></li>
+          </ul>
+          <div style="flex: none; width: 88px; background: var(--raised); padding: 6px; align-self: flex-start;">
+            <img src="/_blob/658076b0e5ce82714a5ef657651f6948" alt="A 17th-century London coffee house: men in wigs reading and talking at long tables" width="88" height="117" style="width: 88px; height: 117px; object-fit: cover; display: block; filter: grayscale(1);">
+          </div>
+        </div>
+      </div>
+      <p style="margin: 48px 0 0; font-size: 13px; line-height: 1.6; color: var(--muted); text-align: center;">© 2026 Code Cafe. Pictures: <a href="https://commons.wikimedia.org/wiki/File:India-coffee-house-kolkata.jpg">“India-coffee-house-kolkata”</a> by Chopr, <a href="https://creativecommons.org/licenses/by/2.0">CC BY 2.0</a>; <a href="https://commons.wikimedia.org/wiki/File:James_Miller_-_The_Interior_of_a_Coffee_House_-_B1993.30.107(34)_-_Yale_Center_for_British_Art.jpg">“The Interior of a Coffee House”</a> by James Miller, CC0; <a href="https://commons.wikimedia.org/wiki/File:Interior_of_a_London_Coffee-house,_17th_century.JPG">“Interior of a London Coffee-house, 17th century”</a>, public domain. All via Wikimedia Commons.</p>
+    </div>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"startTheme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":4980}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { theme: null, input: '2 3', out: null, ticketNo: 1043, step: 0, active: 3 };
+  }
+  renderVals() {
+    var s = this.state;
+    var self = this;
+    var theme = s.theme || this.props.startTheme || 'light';
+    var DECK = [
+      ['Nth Fibonacci', 'dark', 'Dark', 'Print the nth Fibonacci number for n up to 90. Big enough that an int overflows.', '46.3%'],
+      ['Reverse a String', 'medium', 'Medium', 'Read one word and print it backwards. Easy, until the empty line.', '81.7%'],
+      ['Count the Vowels', 'light', 'Light', 'Count a, e, i, o and u in one line of text, upper or lower case.', '88.1%'],
+      ['Sum of Two Numbers', 'light', 'Light', 'Read two integers and print their sum. The best first problem on the menu: three tests, all of them friendly.', '92.4%'],
+      ['Balanced Brackets', 'medium', 'Medium', 'Decide whether every bracket in a line is closed in the right order.', '63.5%'],
+      ['Coin Change', 'dark', 'Dark', 'The fewest coins that make an amount, or -1 when no mix of coins can.', '39.8%']
+    ];
+    var deck = DECK.map(function (d, i) {
+      var flex = i < s.active ? '0 0 120px' : i === s.active ? '0 0 620px' : i === s.active + 1 ? '1 1 0px' : '0 0 0px';
+      return { name: d[0], roast: d[1], label: d[2], excerpt: d[3], acc: d[4], flex: flex, expanded: i === s.active ? 'true' : 'false',
+        pick: function () { self.setState({ active: i }); } };
+    });
+    var stripes = [];
+    for (var k = 0; k < 30; k++) stripes.push({ bg: k % 2 ? 'var(--sheet)' : 'var(--accent-fill)' });
+    var scallops = [];
+    for (var j = 0; j < 12; j++) scallops.push({ n: j });
+    var times = ['0.011 s', '0.012 s', '0.010 s', '0.013 s', '0.012 s', '0.031 s', '0.014 s'];
+    var tests = [];
+    for (var t = 1; t <= 8; t++) tests.push(t <= 7
+      ? { n: t, result: times[t - 1], dot: 'var(--pos)', color: 'var(--muted)' }
+      : { n: t, result: 'Wrong answer', dot: 'var(--neg)', color: 'var(--neg)' });
+    var slips = [
+      { id: '#1051', problem: 'Balanced Brackets', lang: 'Python 3.8', verdict: 'Wrong answer', tests: '7 of 12 tests', time: '0.031 s', when: '12 min ago', h: 300, tilt: 0 },
+      { id: '#1049', problem: 'Balanced Brackets', lang: 'Python 3.8', verdict: 'Time limit', tests: '4 of 12 tests', time: 'over 5 s', when: '25 min ago', h: 380, tilt: -1.5 },
+      { id: '#1043', problem: 'Sum of Two Numbers', lang: 'Python 3.8', verdict: 'Accepted', tests: '3 of 3 tests', time: '0.016 s', when: '1 h ago', h: 270, tilt: 0 },
+      { id: '#1036', problem: 'Prime Sieve up to N', lang: 'C++ 17', verdict: 'Accepted', tests: '6 of 6 tests', time: '0.142 s', when: 'Yesterday 21:40', h: 350, tilt: 1.5 },
+      { id: '#1031', problem: 'Longest Common Prefix', lang: 'Java 13', verdict: 'Runtime error', tests: '2 of 8 tests', time: 'stopped', when: 'Yesterday 21:05', h: 250, tilt: 0 },
+      { id: '#1027', problem: 'Count the Vowels', lang: 'Python 3.8', verdict: 'Accepted', tests: '5 of 5 tests', time: '0.018 s', when: 'Mon 19:12', h: 330, tilt: -1 }
+    ];
+    var out = s.out;
+    return {
+      theme: theme,
+      themeLabel: theme === 'light' ? 'Switch to the dark theme' : 'Switch to the light theme',
+      sunOpacity: theme === 'light' ? 1 : 0.55,
+      moonOpacity: theme === 'dark' ? 1 : 0.55,
+      knobLeft: theme === 'light' ? 3 : 19,
+      toggleTheme: function () { self.setState({ theme: theme === 'light' ? 'dark' : 'light' }); },
+      stripes: stripes, scallops: scallops, tests: tests, slips: slips, deck: deck,
+      input: s.input,
+      onInput: function (e) { self.setState({ input: e.target.value }); },
+      run: function () {
+        var parts = String(self.state.input).trim().split(/\s+/);
+        var ok = parts.length === 2 && parts.every(function (p) { return /^-?\d+$/.test(p); });
+        self.setState({ out: ok
+          ? { text: String(Number(parts[0]) + Number(parts[1])), note: 'Ran in 0.014 s · exit code 0', err: false }
+          : { text: 'ValueError: expected two integers', note: 'Exit code 1', err: true } });
+      },
+      submit: function () { self.setState({ ticketNo: self.state.ticketNo + 1 }); },
+      hasOut: !!out,
+      outText: out ? out.text : '',
+      outNote: out ? out.note : '',
+      outColor: out && out.err ? 'var(--neg)' : 'var(--text)',
+      ticket: { id: '#' + s.ticketNo, verdict: 'Accepted', tests: '3 of 3 tests', time: '0.016 s' },
+      offset: s.step * 312,
+      progress: Math.round(((s.step + 4) / 6) * 100),
+      prev: function () { self.setState({ step: Math.max(0, self.state.step - 1) }); },
+      next: function () { self.setState({ step: Math.min(2, self.state.step + 1) }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

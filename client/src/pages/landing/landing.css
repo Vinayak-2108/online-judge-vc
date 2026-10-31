@@ -1,0 +1,379 @@
+/* The landing page: its own tokens on top of the app's, and the layout rules from the mockup. */
+.landing {
+    --field: #1a1612;
+    --on-field: #ffffff;
+    --card: #ffffff;
+    --code: #fbfaf8;
+    --kw: #b84c00;
+    --paper: #ffffff;
+    --paper-ink: #1a1612;
+    --roast-light-ink: #1a1612;
+    --roast-medium-ink: #ffffff;
+    --roast-dark-ink: #ffffff;
+    --on-accent: #1a1612;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    background: var(--field);
+    color: var(--text);
+}
+
+:root[data-theme="dark"] .landing {
+    --field: #0d0d0d;
+    --on-field: #f5f3ef;
+    --card: #1e1e1e;
+    --code: #0f0f0f;
+    --kw: #ff8a2a;
+    --paper: #ece8e1;
+    --roast-light-ink: #141414;
+    --roast-medium-ink: #141414;
+    --roast-dark-ink: #ffffff;
+    --on-accent: #141414;
+}
+
+.landing a {
+    color: var(--brand-strong);
+}
+.landing a {
+    text-decoration: underline;
+}
+.landing a:hover {
+    color: var(--text);
+}
+.landing a.btn,
+.landing a.card {
+    text-decoration: none;
+}
+.landing .nav-theme {
+    display: none;
+}
+.landing :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
+}
+
+/* Display type: Archivo at its narrowest width. */
+.landing .display {
+    font-family: var(--font-sans);
+    font-stretch: 62%;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.landing .slip-phone {
+    display: none;
+}
+
+/* Entrances: opacity and translate only, once, as a part scrolls into view. */
+.landing .reveal {
+    opacity: 0;
+    translate: 0 18px;
+    transition: opacity 0.5s ease, translate 0.5s ease;
+}
+.landing .reveal.in {
+    opacity: 1;
+    translate: 0 0;
+}
+.landing .reveal-slip {
+    translate: 0 40px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .landing .reveal {
+        opacity: 1;
+        translate: 0 0;
+        transition: none;
+    }
+}
+.landing .num {
+    font-variant-numeric: tabular-nums;
+}
+
+.landing .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 0;
+    border: 1px solid transparent; /* taste-skill-ignore: a real control border */
+    font: 500 15px/1 var(--font-sans);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.16s ease, background-color 0.16s ease;
+}
+.landing .btn:hover {
+    transform: translateY(-1px);
+}
+.landing .btn:active {
+    transform: translateY(1px);
+}
+.landing .btn-accent {
+    background: var(--brand-fill);
+    color: var(--on-accent);
+    height: 52px;
+    padding: 0 28px;
+    font-size: 17px;
+}
+.landing a.btn-accent,
+.landing a.btn-accent:hover {
+    color: var(--on-accent);
+}
+.landing .btn-primary {
+    background: var(--primary);
+    color: var(--primary-ink);
+}
+.landing a.btn-primary,
+.landing a.btn-primary:hover {
+    color: var(--primary-ink);
+}
+.landing .btn-secondary {
+    background: var(--sheet);
+    color: var(--text);
+    border-color: var(--control);
+}
+.landing .ui .btn {
+    border-radius: 6px;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 14px;
+}
+
+.landing .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+    min-height: 900px;
+    box-sizing: border-box;
+}
+.landing .how-row {
+    display: flex;
+    gap: 32px;
+    padding-top: 28px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.landing .how-row::-webkit-scrollbar {
+    display: none;
+}
+.landing .how-col {
+    flex: none;
+    width: 280px;
+}
+.landing .deck .card {
+    transition: flex-basis 0.36s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.landing .deck .card:hover .solve {
+    text-decoration: underline;
+}
+.landing .cta-card {
+    position: absolute;
+    right: 6%;
+    bottom: -60px;
+    width: min(44vw, 640px);
+    aspect-ratio: 7 / 5;
+    transform: rotate(2deg);
+}
+.landing .foot-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+}
+.landing .slips {
+    display: flex;
+}
+
+@media (max-width: 860px) {
+    .landing .hero {
+        grid-template-columns: 1fr;
+        min-height: 0;
+        padding: 12px;
+    }
+    /* phones: the live editor comes first, the menu card overlaps its foot */
+    .landing .room {
+        order: -1;
+        padding: 20px 16px 44px !important;
+    }
+    .landing .hero-card {
+        margin-top: -24px;
+        position: relative;
+    }
+    .landing .hero-stripes {
+        height: 40px !important;
+    }
+    .landing .slip-phone {
+        display: flex !important;
+        justify-content: space-between;
+    }
+    .landing .room-title,
+    .landing .room-hint,
+    .landing .slip-full {
+        display: none !important;
+    }
+    .landing .room {
+        --hero-code: 12px;
+        gap: 14px !important;
+    }
+    .landing .hero-controls {
+        gap: 8px !important;
+        padding: 10px 14px !important;
+        flex-wrap: nowrap !important;
+    }
+    .landing .hero-controls label {
+        font-size: 13px !important;
+    }
+    .landing #hero-input {
+        width: 72px !important;
+        height: 32px !important;
+    }
+    .landing .room .ui .btn,
+    .landing .hero-controls .btn {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13px;
+    }
+    .landing .hero-body {
+        padding: 24px 0 24px !important;
+    }
+    .landing .hero-body h1 {
+        margin-top: 22px !important;
+    }
+    .landing .slip-box {
+        width: 220px !important;
+        min-height: 0 !important;
+    }
+    .landing .hero-code-wrap {
+        scrollbar-width: none;
+    }
+    /* phones: no reserved gap inside the card; the output appears when it is asked for */
+    .landing .hero-output[aria-hidden="true"] {
+        display: none;
+    }
+    .landing .hero-toggle {
+        display: none !important;
+    }
+    .landing .nav-theme {
+        display: inline-flex;
+        align-items: center;
+    }
+    .landing .hero-brand {
+        font-size: 30px !important;
+    }
+    .landing .hero-card nav {
+        padding: 0 16px 18px !important;
+        gap: 12px 20px !important;
+    }
+    .landing .hero-card nav a {
+        text-decoration: underline;
+    }
+    .landing .hero-card .btn-accent {
+        align-self: stretch;
+        margin: 20px 20px 0 !important;
+        height: 52px;
+    }
+    .landing .hero-copy {
+        font-size: 16px !important;
+        margin: 16px 20px 0 !important;
+    }
+    .landing .how {
+        padding: 96px 16px !important;
+    }
+    .landing .how-col {
+        width: 72vw;
+    }
+    .landing .how-nav {
+        display: none !important;
+    }
+    .landing .menu {
+        padding: 96px 16px !important;
+    }
+    .landing .deck {
+        flex-direction: column !important;
+        height: auto !important;
+        gap: 12px;
+    }
+    .landing .deck .card {
+        flex: none !important;
+        width: 100% !important;
+    }
+    .landing .deck .card .inner {
+        width: auto !important;
+    }
+    /* phones: caption, text, then the slips in the flow, so nothing covers anything */
+    .landing .showcase {
+        height: auto !important;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        padding: 80px 0 0;
+        box-sizing: border-box;
+    }
+    .landing .scrim p {
+        font-size: 18px !important;
+    }
+    .landing .scrim {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: auto !important;
+        margin: 0 16px;
+    }
+    .landing .slips {
+        position: relative !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        margin-top: 40px;
+        padding: 0 12px 24px;
+        align-items: flex-start !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    /* phones: slips wide enough for their text, as tall as their content */
+    .landing .slips .slip {
+        flex: 0 0 164px !important;
+        height: auto !important;
+        padding: 14px 14px 20px !important;
+        font-size: 14px !important;
+    }
+    .landing .slips .slip .slip-head {
+        font-size: 13px;
+        white-space: nowrap;
+    }
+    .landing .cta {
+        padding: 96px 16px 0 !important;
+        min-height: 0 !important;
+    }
+    .landing .cta-card {
+        position: relative;
+        right: auto;
+        bottom: -40px;
+        width: 90%;
+        margin: 48px auto 0;
+        transform: rotate(1deg);
+    }
+    .landing .cta-copy {
+        position: static !important;
+        max-width: none !important;
+    }
+    .landing .foot-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing .btn,
+    .landing .how-row,
+    .landing .deck .card {
+        transition: none;
+    }
+}
+
+/* The dashed rule is one line, never wrapped. */
+.landing .slip div[aria-hidden="true"] {
+    white-space: nowrap;
+    overflow: hidden;
+}

@@ -1,0 +1,16 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.sqlite3
+staticfiles/
+.env
+
+# Node
+node_modules/
+dist/
+client/.env
+client/.env.local
+
+.DS_Store
