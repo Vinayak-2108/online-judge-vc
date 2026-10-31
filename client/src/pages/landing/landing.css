@@ -248,6 +248,10 @@
     .landing .hero-code-wrap {
         scrollbar-width: none;
     }
+    /* phones: no reserved gap inside the card; the output appears when it is asked for */
+    .landing .hero-output[aria-hidden="true"] {
+        display: none;
+    }
     .landing .hero-toggle {
         display: none !important;
     }

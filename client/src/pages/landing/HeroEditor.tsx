@@ -281,6 +281,7 @@ export default function HeroEditor() {
 
                 {/* the space is reserved before the first run, so nothing below it moves */}
                 <div
+                    className="hero-output"
                     aria-hidden={!out}
                     style={{
                         padding: "12px 18px 14px",
