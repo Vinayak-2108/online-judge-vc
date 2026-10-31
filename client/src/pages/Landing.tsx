@@ -493,7 +493,7 @@ function SlipCard({ s, i }: { s: Submission; i: number }) {
                 lineHeight: 1.6,
             }}
         >
-            <div style={{ fontWeight: 700 }}>Submission #{s.id}</div>
+            <div className="slip-head" style={{ fontWeight: 700 }}>Submission #{s.id}</div>
             <div aria-hidden style={{ color: "#615a52", letterSpacing: ".1em" }}>
                 - - - - - - - - - -
             </div>

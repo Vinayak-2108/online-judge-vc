@@ -245,7 +245,7 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
                 </span>
                 <Link
                     to="/submissions"
-                    className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-brand-strong"
+                    className="-mx-2 -my-3 ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-3 whitespace-nowrap text-brand-strong"
                 >
                     <span>
                         All <span className="@max-[540px]:hidden">submissions</span>

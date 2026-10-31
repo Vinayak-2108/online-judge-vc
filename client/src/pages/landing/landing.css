@@ -332,8 +332,16 @@
         overflow-x: auto;
         overflow-y: hidden;
     }
+    /* phones: slips wide enough for their text, as tall as their content */
     .landing .slips .slip {
-        flex: 0 0 30vw !important;
+        flex: 0 0 164px !important;
+        height: auto !important;
+        padding: 14px 14px 20px !important;
+        font-size: 14px !important;
+    }
+    .landing .slips .slip .slip-head {
+        font-size: 13px;
+        white-space: nowrap;
     }
     .landing .cta {
         padding: 96px 16px 0 !important;
@@ -362,4 +370,10 @@
     .landing .deck .card {
         transition: none;
     }
+}
+
+/* The dashed rule is one line, never wrapped. */
+.landing .slip div[aria-hidden="true"] {
+    white-space: nowrap;
+    overflow: hidden;
 }
