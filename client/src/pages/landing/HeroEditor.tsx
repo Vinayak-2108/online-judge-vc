@@ -57,6 +57,9 @@ interface Slip {
     verdict: string;
     tests: string;
     time: string;
+    /** "run": a practice Run (output and run time, no tests line). */
+    kind?: "run";
+    output?: string;
 }
 
 /** "0.016 s", "over 5 s" for a time limit, "stopped" for a crash or a compile error. */
@@ -84,20 +87,19 @@ export default function HeroEditor() {
     const code = codes[lang];
     const lines = useMemo(() => code.split("\n"), [code]);
 
-    // Before anything is run, the slip shows the latest real accepted submission for this problem.
+    // Before anything is run, the slip shows the newest truly accepted submission for this problem,
+    // asked of the server (not found by scanning recent ones).
     useEffect(() => {
         let live = true;
-        get_all_submissions({ verdict: "accepted", limit: 50 })
+        get_all_submissions({ verdict: "accepted", problem: "sum-of-two-numbers", limit: 1 })
             .then((rows) => {
-                const latest = rows
-                    .filter((r) => r.problem_slug === "sum-of-two-numbers")
-                    .sort((x, y) => Date.parse(y.submission_time) - Date.parse(x.submission_time))[0];
+                const latest = rows.find((r) => verdictKind(r.verdict) === "accepted" && r.problem_slug === "sum-of-two-numbers");
                 if (live && latest)
                     setReal({
                         id: latest.id,
                         language: latest.language,
-                        verdict: "Accepted",
-                        tests: `${latest.passed ?? 0} of ${latest.total ?? 0} tests`,
+                        verdict: verdictShort(latest.verdict),
+                        tests: latest.passed != null && latest.total != null ? `${latest.passed} of ${latest.total} tests` : "\u2014",
                         time: formatRuntime(latest.runtime_ms),
                     });
             })
@@ -118,6 +120,15 @@ export default function HeroEditor() {
             const { ok, status, data } = await demo_run({ lang, code, input_data: input });
             if (!ok) return fail(status, data.error);
             const failed = !!data.error;
+            setPractice({
+                id: null,
+                kind: "run",
+                language: lang,
+                verdict: failed ? "Error" : "Ran",
+                output: (data.error || data.output || "").trim().split("\n")[0].slice(0, 14) || "(none)",
+                tests: "\u2014",
+                time: data.runtime_ms != null ? formatRuntime(data.runtime_ms) : "\u2014",
+            });
             setOut({
                 text: data.error || data.output || "(no output)",
                 note:
@@ -323,17 +334,17 @@ export default function HeroEditor() {
                     <div className="slip-full">Sum of Two Numbers</div>
                     <div className="slip-full">{LANGUAGE_LABEL[practice ? lang : rows.language] ?? rows.language}</div>
                     <div className="slip-full" style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span>{rows.verdict}</span>
-                        <span className="num">{rows.tests}</span>
+                        <span>{rows.kind === "run" ? "Output" : rows.verdict}</span>
+                        <span className="num">{rows.kind === "run" ? rows.output : rows.tests}</span>
                     </div>
                     <div className="slip-full" style={{ display: "flex", justifyContent: "space-between" }}>
                         <span>Run time</span>
                         <span className="num">{rows.time}</span>
                     </div>
                     <div className="slip-phone">
-                        <span>{rows.verdict}</span>
+                        <span>{rows.kind === "run" ? "Output" : rows.verdict}</span>
                         <span className="num">
-                            {slip ? `${rows.tests.replace(" tests", "")} · ${rows.time}` : ""}
+                            {slip ? (rows.kind === "run" ? `${rows.output} · ${rows.time}` : `${rows.tests.replace(" tests", "")} · ${rows.time}`) : ""}
                         </span>
                     </div>
                 </motion.div>

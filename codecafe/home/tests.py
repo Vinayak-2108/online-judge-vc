@@ -281,6 +281,13 @@ class ProblemStatsTests(APITestCase):
         self.assertEqual((summary['matching'], summary['matching_week']), (1, 0))
         summary = self.client.get('/api/submissions/summary/').data
         self.assertEqual((summary['matching'], summary['matching_week']), (5, 4))
+        # one problem's submissions, and the newest accepted one for it
+        self.sub(self.alice, 2, 'Accepted')
+        by_problem = lambda q: [s['problem_slug'] for s in self.client.get('/api/submissions/' + q).data]
+        self.assertEqual(set(by_problem('?problem=reverse-a-string')), {'reverse-a-string'})
+        self.assertEqual(by_problem('?problem=sum-of-two-numbers&verdict=accepted&limit=1'), ['sum-of-two-numbers'])
+        self.assertEqual(by_problem('?problem=nth-fibonacci'), [])
+        self.assertEqual(self.client.get('/api/submissions/summary/?problem=reverse-a-string').data['matching'], 4)
         for bad in ('?verdict=nope', '?language=rust'):
             self.assertEqual(self.client.get('/api/submissions/' + bad).status_code, 400)
             self.assertEqual(self.client.get('/api/submissions/summary/' + bad).status_code, 400)

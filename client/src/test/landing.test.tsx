@@ -207,15 +207,20 @@ describe("the live editor", () => {
         expect((call.body as { code: string }).code).toContain("sys.stdin.read()");
     });
 
-    it("shows the latest real accepted submission on the slip until something is run", async () => {
+    it("shows the newest accepted Sum submission, asked of the server for that problem", async () => {
         mockApi({
-            submissions: (url) =>
-                [
+            submissions: (url) => {
+                const q = new URL(url).searchParams;
+                return [
                     sub(30, { verdict: "Wrong Answer on tc 1", submission_time: ago(1) }),
                     sub(29, { problem_slug: "other", problem: "Other", submission_time: ago(2) }),
                     sub(28, { language: "cpp", submission_time: ago(5) }),
                     sub(27, { submission_time: ago(9) }),
-                ].filter((r) => new URL(url).searchParams.get("verdict") !== "accepted" || r.verdict === "Accepted"),
+                ]
+                    .filter((r) => !q.get("verdict") || (q.get("verdict") === "accepted" ? r.verdict === "Accepted" : true))
+                    .filter((r) => !q.get("problem") || r.problem_slug === q.get("problem"))
+                    .slice(0, Number(q.get("limit") ?? 100));
+            },
         });
         renderAt("/");
         await screen.findByRole("button", { name: "Submit" });
@@ -224,7 +229,21 @@ describe("the live editor", () => {
         expect(live).toHaveTextContent("C++ (GCC 9.2)");
         expect(live).toHaveTextContent("Accepted");
         expect(live).toHaveTextContent("3 of 3 tests");
-        expect(calls.some((c) => c.url.includes("/api/submissions/") && c.url.includes("verdict=accepted"))).toBe(true);
+        const ask = calls.find((c) => c.url.includes("/api/submissions/") && c.url.includes("verdict=accepted"))!;
+        expect(ask.url).toContain("problem=sum-of-two-numbers");
+        expect(ask.url).toContain("limit=1");
+    });
+
+    it("never labels a submission that was not accepted as Accepted", async () => {
+        // a misbehaving response: the server hands back a wrong answer despite the filter
+        mockApi({ submissions: () => [sub(5, { verdict: "Wrong Answer on tc 2", passed: 0 })] });
+        renderAt("/");
+        await screen.findByRole("button", { name: "Submit" });
+        const live = document.querySelector('[aria-live="polite"]') as HTMLElement;
+        await new Promise((r) => setTimeout(r, 300));
+        expect(live).toHaveTextContent("Waiting for a run");
+        expect(live).not.toHaveTextContent("Accepted");
+        expect(live).not.toHaveTextContent(/#\d/);
     });
 
     it("falls back to a blank slip when there is no accepted submission", async () => {
@@ -233,6 +252,19 @@ describe("the live editor", () => {
         await screen.findByRole("button", { name: "Submit" });
         const live = document.querySelector('[aria-live="polite"]') as HTMLElement;
         expect(live).toHaveTextContent("Waiting for a run");
+        expect(live).not.toHaveTextContent(/#\d/);
+    });
+
+    it("turns the slip into a practice run after Run, with the output and run time and no tests line", async () => {
+        const user = userEvent.setup();
+        mockApi({ post: { "/demo/run": demoRun } });
+        renderAt("/");
+        await user.click(await screen.findByRole("button", { name: "Run" }));
+        const live = document.querySelector('[aria-live="polite"]') as HTMLElement;
+        await waitFor(() => expect(live).toHaveTextContent("Practice run"));
+        expect(live).toHaveTextContent("Output");
+        expect(live).toHaveTextContent("0.014 s");
+        expect(live).not.toHaveTextContent("tests");
         expect(live).not.toHaveTextContent(/#\d/);
     });
 

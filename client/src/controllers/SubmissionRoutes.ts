@@ -11,6 +11,8 @@ export interface SubmissionQuery {
     verdict?: string;
     /** c | cpp | java | py */
     language?: string;
+    /** a problem's slug */
+    problem?: string;
 }
 
 function filterParams(query: SubmissionQuery) {
@@ -18,6 +20,7 @@ function filterParams(query: SubmissionQuery) {
     if (query.mine) params.set("mine", "1");
     if (query.verdict) params.set("verdict", query.verdict);
     if (query.language) params.set("language", query.language);
+    if (query.problem) params.set("problem", query.problem);
     return params;
 }
 

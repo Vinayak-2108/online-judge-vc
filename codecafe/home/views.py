@@ -91,7 +91,7 @@ def questionDetail(request, pk=None, slug=None):
 
 
 def _filtered_submissions(request):
-    """Submissions narrowed by ?mine=1&verdict=&language=; returns (queryset, error response)."""
+    """Submissions narrowed by ?mine=1&verdict=&language=&problem=<slug>; returns (queryset, error response)."""
     submissions = Submissions.objects.select_related('user', 'question')
     if request.query_params.get('mine') and request.user.is_authenticated:
         submissions = submissions.filter(user=request.user)
@@ -101,6 +101,9 @@ def _filtered_submissions(request):
         if prefix is None:
             return None, Response({'error': f'Unknown verdict filter: {verdict}'}, status=status.HTTP_400_BAD_REQUEST)
         submissions = submissions.filter(verdict=prefix) if verdict == 'accepted' else submissions.filter(verdict__startswith=prefix)
+    problem = request.query_params.get('problem')
+    if problem:
+        submissions = submissions.filter(question__slug=problem)
     language = request.query_params.get('language')
     if language:
         if language not in compiler.LANG_IDS:
