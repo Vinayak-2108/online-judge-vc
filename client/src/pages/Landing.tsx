@@ -360,6 +360,7 @@ function Menu({ questions }: { questions: Question[] }) {
     const deck = useMemo(() => pickDeck(questions), [questions]);
     const start = Math.max(0, deck.findIndex((d) => d.slug === "sum-of-two-numbers"));
     const [chosen, setChosen] = useState<number | null>(null);
+    const pointerWasOpen = useRef<boolean | null>(null);
     const active = Math.min(chosen ?? (start === -1 ? 0 : start), Math.max(deck.length - 1, 0));
 
     const counts = { light: 0, medium: 0, dark: 0 } as Record<Roast, number>;
@@ -402,22 +403,33 @@ function Menu({ questions }: { questions: Question[] }) {
                             </span>
                         </div>
                     );
-                    return stacked || i === active ? (
-                        <Link key={item.slug} className="card" to={`/problems/${item.slug}`} style={style} aria-label={`${item.name}: solve it`}>
-                            {inner}
-                        </Link>
-                    ) : (
-                        <button
+                    const open = stacked || i === active;
+                    // One element type for every card, so focus is never lost when a card opens.
+                    return (
+                        <Link
                             key={item.slug}
-                            type="button"
                             className="card"
-                            onClick={() => setChosen(i)}
-                            onFocus={() => setChosen(i)}
-                            aria-expanded={false}
+                            to={`/problems/${item.slug}`}
                             style={style}
+                            aria-label={open ? `${item.name}: solve it` : item.name}
+                            aria-expanded={stacked ? undefined : open}
+                            onFocus={() => !stacked && setChosen(i)}
+                            onMouseDown={() => {
+                                pointerWasOpen.current = open;
+                            }}
+                            onClick={(e) => {
+                                // A click on a folded card opens it; a click on the open card goes to the problem.
+                                // (Keyboard: focus has already opened the card, so Enter goes to the problem.)
+                                const wasOpen = pointerWasOpen.current ?? open;
+                                pointerWasOpen.current = null;
+                                if (!wasOpen) {
+                                    e.preventDefault();
+                                    setChosen(i);
+                                }
+                            }}
                         >
                             {inner}
-                        </button>
+                        </Link>
                     );
                 })}
             </div>

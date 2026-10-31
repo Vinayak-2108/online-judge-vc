@@ -50,9 +50,13 @@ describe("landing page", () => {
         expect(screen.getByRole("link", { name: "See the full menu" })).toHaveAttribute("href", "/problems");
         const open = screen.getByRole("link", { name: /Sum of Two Numbers|sum of two numbers: solve it/i });
         expect(open).toHaveAttribute("href", "/problems/sum-of-two-numbers");
-        // another card opens on click, then it links to its own problem
-        await user.click(screen.getByRole("button", { name: /Balanced Brackets|balanced brackets/i }));
+        // a click on a folded card opens it (it does not leave the page); a click on the open card goes to the problem
+        await user.click(screen.getByRole("link", { name: /^balanced brackets$/i }));
+        expect(screen.getByTestId("where")).toHaveTextContent("/");
+        expect(screen.getByTestId("where")).not.toHaveTextContent("/problems");
         expect(screen.getByRole("link", { name: /balanced brackets: solve it/i })).toHaveAttribute("href", "/problems/balanced-brackets");
+        await user.click(screen.getByRole("link", { name: /balanced brackets: solve it/i }));
+        await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/problems/balanced-brackets"));
     });
 
     it("shows up to six real recent slips with a mix of verdicts, and copes with fewer", async () => {
@@ -114,14 +118,33 @@ describe("landing page", () => {
         expect(screen.queryByRole("link", { name: "Create an account" })).not.toBeInTheDocument();
     });
 
-    it("opens a folded menu card on focus, so a Tab stop is never invisible", async () => {
+    it("opens a folded menu card on focus, and Tab walks through all six cards to the menu link and back", async () => {
         const user = userEvent.setup();
         mockApi({ questions: menu });
         renderAt("/");
-        const card = await screen.findByRole("button", { name: /coin change/i });
-        await user.tab(); // somewhere on the page first
-        card.focus();
-        await waitFor(() => expect(screen.getByRole("link", { name: /coin change: solve it/i })).toBeInTheDocument());
+        await screen.findByText(/12 problems on the menu/);
+        const deck = document.querySelector(".deck") as HTMLElement;
+        const cards = within(deck).getAllByRole("link");
+        expect(cards).toHaveLength(6);
+
+        cards[0].focus();
+        const seen: Element[] = [document.activeElement as Element];
+        for (let i = 0; i < 6; i++) {
+            await user.tab();
+            expect(document.activeElement).not.toBe(document.body);
+            seen.push(document.activeElement as Element);
+        }
+        // cards 0..5 in order, then "See the full menu"
+        expect(seen.slice(0, 6)).toEqual(cards);
+        expect(seen[6]).toBe(screen.getByRole("link", { name: "See the full menu" }));
+        // the card under focus is the open one
+        expect(cards[5]).toHaveAttribute("aria-label", "coin change: solve it");
+
+        for (let i = 0; i < 6; i++) {
+            await user.tab({ shift: true });
+            expect(document.activeElement).not.toBe(document.body);
+        }
+        expect(document.activeElement).toBe(cards[0]);
     });
 
     it("makes every menu card a link at once on a phone", async () => {
