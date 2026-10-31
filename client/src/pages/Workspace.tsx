@@ -228,19 +228,19 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
                 data-testid="ticket"
             >
                 <span className="shrink-0 font-code text-[13px]">
-                    <span className="@max-[470px]:hidden">Submission </span>#{t.id}
+                    <span className="@max-[640px]:hidden">Submission </span>#{t.id}
                 </span>
                 <span className="shrink-0">
                     <VerdictPill verdict={t.verdict} />
                 </span>
                 <span className="shrink-0 tabular-nums">
                     {t.passed} of {t.total}
-                    <span className="@max-[430px]:hidden"> tests passed</span>
+                    <span className="@max-[560px]:hidden"> tests passed</span>
                 </span>
                 <span className="shrink-0">
                     <Runtime text={runtimeFor(t.verdict, t.runtime_ms)} />
                 </span>
-                <span className="min-w-0 truncate text-muted-ink @max-[560px]:hidden">
+                <span className="min-w-0 truncate text-muted-ink @max-[600px]:hidden">
                     {LANGUAGE_LABEL[t.lang] ?? t.lang} {"\u00b7"} {relativeTime(t.at)}
                 </span>
                 <Link
@@ -248,7 +248,7 @@ function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
                     className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-brand-strong"
                 >
                     <span>
-                        All <span className="@max-[430px]:hidden">submissions</span>
+                        All <span className="@max-[540px]:hidden">submissions</span>
                     </span>
                     <ChevronRightIcon className="size-4" aria-hidden />
                 </Link>
