@@ -68,7 +68,7 @@ describe("landing page", () => {
             ],
         });
         renderAt("/");
-        await screen.findByText("Submission #9");
+        await screen.findAllByText("Submission #9");
         const ids = screen.getAllByText(/^Submission #\d+$/).filter((e) => e.closest(".slip")).map((e) => e.textContent);
         expect(ids).toHaveLength(6);
         // one of each verdict kind is in, even though the newest three were all accepted
@@ -80,7 +80,7 @@ describe("landing page", () => {
 
         mockApi({ submissions: () => [sub(1)] });
         renderAt("/");
-        await screen.findByText("Submission #1");
+        await screen.findAllByText("Submission #1");
         expect(document.querySelectorAll(".slip")).toHaveLength(1);
         cleanup();
 
@@ -112,6 +112,44 @@ describe("landing page", () => {
         expect(await screen.findByRole("heading", { name: "Back to the counter" })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: "Open the problems" })).toHaveAttribute("href", "/problems");
         expect(screen.queryByRole("link", { name: "Create an account" })).not.toBeInTheDocument();
+    });
+
+    it("opens a folded menu card on focus, so a Tab stop is never invisible", async () => {
+        const user = userEvent.setup();
+        mockApi({ questions: menu });
+        renderAt("/");
+        const card = await screen.findByRole("button", { name: /coin change/i });
+        await user.tab(); // somewhere on the page first
+        card.focus();
+        await waitFor(() => expect(screen.getByRole("link", { name: /coin change: solve it/i })).toBeInTheDocument());
+    });
+
+    it("makes every menu card a link at once on a phone", async () => {
+        vi.stubGlobal("matchMedia", (query: string) => ({ matches: !query.includes("min-width"), media: query, addEventListener() {}, removeEventListener() {} }));
+        mockApi({ questions: menu });
+        renderAt("/");
+        await screen.findByText(/12 problems on the menu/);
+        const deck = document.querySelector(".deck") as HTMLElement;
+        expect(within(deck).queryAllByRole("button")).toHaveLength(0);
+        expect(within(deck).getAllByRole("link")).toHaveLength(6);
+    });
+
+    it("scrolls the how-a-run row with the keyboard too", async () => {
+        const user = userEvent.setup();
+        const scrollBy = vi.fn();
+        const scrollTo = vi.fn();
+        Object.defineProperty(Element.prototype, "scrollBy", { value: scrollBy, configurable: true });
+        Object.defineProperty(Element.prototype, "scrollTo", { value: scrollTo, configurable: true });
+        mockApi();
+        renderAt("/");
+        const region = await screen.findByRole("region", { name: /steps of a run/i });
+        region.focus();
+        await user.keyboard("{ArrowRight}");
+        expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: 312 }));
+        await user.keyboard("{ArrowLeft}");
+        expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: -312 }));
+        await user.keyboard("{Home}");
+        expect(scrollTo).toHaveBeenLastCalledWith(expect.objectContaining({ left: 0 }));
     });
 
     it("scrolls the how-a-run row with the arrow buttons", async () => {
@@ -146,14 +184,44 @@ describe("the live editor", () => {
         expect((call.body as { code: string }).code).toContain("sys.stdin.read()");
     });
 
-    it("prints a slip on Submit with the verdict, tests and runtime, and numbers it from the real tally", async () => {
+    it("shows the latest real accepted submission on the slip until something is run", async () => {
+        mockApi({
+            submissions: (url) =>
+                [
+                    sub(30, { verdict: "Wrong Answer on tc 1", submission_time: ago(1) }),
+                    sub(29, { problem_slug: "other", problem: "Other", submission_time: ago(2) }),
+                    sub(28, { language: "cpp", submission_time: ago(5) }),
+                    sub(27, { submission_time: ago(9) }),
+                ].filter((r) => new URL(url).searchParams.get("verdict") !== "accepted" || r.verdict === "Accepted"),
+        });
+        renderAt("/");
+        await screen.findByRole("button", { name: "Submit" });
+        const live = document.querySelector('[aria-live="polite"]') as HTMLElement;
+        await waitFor(() => expect(live).toHaveTextContent("Submission #28"));
+        expect(live).toHaveTextContent("C++ (GCC 9.2)");
+        expect(live).toHaveTextContent("Accepted");
+        expect(live).toHaveTextContent("3 of 3 tests");
+        expect(calls.some((c) => c.url.includes("/api/submissions/") && c.url.includes("verdict=accepted"))).toBe(true);
+    });
+
+    it("falls back to a blank slip when there is no accepted submission", async () => {
+        mockApi({ submissions: () => [] });
+        renderAt("/");
+        await screen.findByRole("button", { name: "Submit" });
+        const live = document.querySelector('[aria-live="polite"]') as HTMLElement;
+        expect(live).toHaveTextContent("Waiting for a run");
+        expect(live).not.toHaveTextContent(/#\d/);
+    });
+
+    it("prints a practice run on Submit, with no submission number, since nothing is saved", async () => {
         const user = userEvent.setup();
         mockApi({ post: { "/demo/submit": demoSubmit } });
         renderAt("/");
         await user.click(await screen.findByRole("button", { name: "Submit" }));
         const live = document.querySelector('[aria-live="polite"]') as HTMLElement;
         await waitFor(() => expect(within(live).getAllByText("Accepted").length).toBeGreaterThan(0));
-        expect(live).toHaveTextContent("Submission #215"); // 214 submissions so far
+        expect(live).toHaveTextContent("Practice run");
+        expect(live).not.toHaveTextContent(/#\d/);
         expect(live).toHaveTextContent("3 of 3 tests");
         expect(live).toHaveTextContent("0.016 s");
         expect(live).toHaveTextContent("Python 3.8");

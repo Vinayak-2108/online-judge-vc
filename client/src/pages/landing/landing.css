@@ -154,7 +154,6 @@
     gap: 32px;
     padding-top: 28px;
     overflow-x: auto;
-    scroll-snap-type: x proximity;
     scrollbar-width: none;
 }
 .landing .how-row::-webkit-scrollbar {
@@ -163,7 +162,6 @@
 .landing .how-col {
     flex: none;
     width: 280px;
-    scroll-snap-align: start;
 }
 .landing .deck .card {
     transition: flex-basis 0.36s cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -300,21 +298,35 @@
     .landing .deck .card .inner {
         width: auto !important;
     }
+    /* phones: caption, text, then the slips in the flow, so nothing covers anything */
     .landing .showcase {
         height: auto !important;
         min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        padding: 80px 0 0;
+        box-sizing: border-box;
     }
     .landing .scrim p {
         font-size: 18px !important;
     }
     .landing .scrim {
-        left: 16px !important;
-        right: 16px !important;
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
         width: auto !important;
-        top: 80px !important;
+        margin: 0 16px;
     }
     .landing .slips {
+        position: relative !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        margin-top: 40px;
+        padding: 0 12px 24px;
+        align-items: flex-start !important;
         overflow-x: auto;
+        overflow-y: hidden;
     }
     .landing .slips .slip {
         flex: 0 0 30vw !important;
@@ -345,35 +357,5 @@
     .landing .how-row,
     .landing .deck .card {
         transition: none;
-    }
-}
-
-/* A folded card is a spine: its title runs up the edge, so nothing is cut off. */
-.landing .deck .spine {
-    width: 120px;
-    height: 360px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding: 28px 0;
-}
-.landing .deck .spine span {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-size: 24px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-}
-.landing .deck .spine + .inner {
-    display: none !important;
-}
-@media (max-width: 860px) {
-    .landing .deck .spine {
-        display: none;
-    }
-    .landing .deck .spine + .inner {
-        display: flex !important;
     }
 }

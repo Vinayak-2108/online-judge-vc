@@ -47,9 +47,9 @@ describe("workspace", () => {
         const tab = await screen.findByRole("tab", { name: /My submissions/ });
         await waitFor(() => expect(tab).toHaveTextContent("My submissions 2"));
         await user.click(tab);
-        expect(screen.getByText("#8")).toBeInTheDocument();
+        expect(screen.getAllByText("#8").length).toBeGreaterThan(0);
         expect(screen.getByText("Wrong answer")).toBeInTheDocument();
-        expect(screen.queryByText("#6")).not.toBeInTheDocument();
+        expect(screen.queryAllByText("#6")).toHaveLength(0);
     });
 
     it("saves a draft per problem and language and resets it", async () => {

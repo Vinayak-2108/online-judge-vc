@@ -7,6 +7,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { get_all_questions } from "../controllers/QuestionRoutes";
 import { get_all_submissions } from "../controllers/SubmissionRoutes";
 import { useAuth } from "../lib/auth";
+import { useMediaQuery } from "../lib/useMediaQuery";
 import {
     formatPercent,
     formatRuntime,
@@ -170,8 +171,23 @@ function HowItWorks() {
         return () => cancelAnimationFrame(id);
     }, []);
 
-    const scrollBy = (dir: 1 | -1) =>
-        row.current?.scrollBy({ left: dir * 312, behavior: reduce ? "auto" : "smooth" });
+    const behavior = reduce ? "auto" : "smooth";
+    const scrollBy = (dir: 1 | -1) => row.current?.scrollBy({ left: dir * 312, behavior });
+    const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        const el = row.current;
+        if (!el) return;
+        const keys: Record<string, () => void> = {
+            ArrowRight: () => el.scrollBy({ left: 312, behavior }),
+            ArrowLeft: () => el.scrollBy({ left: -312, behavior }),
+            Home: () => el.scrollTo({ left: 0, behavior }),
+            End: () => el.scrollTo({ left: el.scrollWidth, behavior }),
+        };
+        const go = keys[e.key];
+        if (go) {
+            e.preventDefault();
+            go();
+        }
+    };
 
     return (
         <section id="how" className="how" style={{ background: "var(--sheet)", padding: sectionPad, overflow: "hidden" }}>
@@ -201,7 +217,7 @@ function HowItWorks() {
             <div aria-hidden style={{ height: 6, background: "var(--raised)", marginTop: 20 }}>
                 <div style={{ height: 6, width: `${progress}%`, background: "var(--text)", transition: "width .32s ease" }} />
             </div>
-            <div ref={row} className="how-row" tabIndex={0} role="region" aria-label="The steps of a run, scrollable" onScroll={measure}>
+            <div ref={row} className="how-row" tabIndex={0} role="region" aria-label="The steps of a run, scrollable" onScroll={measure} onKeyDown={onKeyDown}>
                 <Step title="Take a seat" text="Sign in and pick a problem from the menu. Each one shows its roast and how many people got it right." gap={96}>
                     <img
                         src="/images/interior-of-a-coffee-house-miller.jpg"
@@ -339,6 +355,8 @@ function pickDeck(questions: Question[]): DeckItem[] {
 function Menu({ questions }: { questions: Question[] }) {
     const [titleRef, titleCls] = useReveal();
     const [deckRef, deckCls] = useReveal();
+    // Stacked on phones: every card is a link at once. Folded on wide screens: a card opens on click or focus.
+    const stacked = !useMediaQuery("(min-width: 861px)");
     const deck = useMemo(() => pickDeck(questions), [questions]);
     const start = Math.max(0, deck.findIndex((d) => d.slug === "sum-of-two-numbers"));
     const [chosen, setChosen] = useState<number | null>(null);
@@ -369,35 +387,35 @@ function Menu({ questions }: { questions: Question[] }) {
                         display: "block",
                         textDecoration: "none",
                     };
-                    const spine = i < active;
                     const inner = (
-                        <>
-                            {spine && (
-                                <div className="spine">
-                                    <span>{item.name}</span>
-                                </div>
-                            )}
-                            <div className="inner" style={{ width: 556, height: 360, boxSizing: "border-box", padding: 32, display: "flex", flexDirection: "column", gap: 12 }}>
-                                <span style={{ fontSize: 30, fontWeight: 600, lineHeight: 1.1, letterSpacing: "-.01em" }}>{item.name}</span>
-                                <span style={{ fontSize: 16, lineHeight: 1.5, maxWidth: "46ch" }}>{item.excerpt}</span>
-                                <span style={{ flex: 1 }} />
-                                <span style={{ display: "flex", justifyContent: "space-between", gap: 16, fontSize: 16 }}>
-                                    <span>
-                                        {ROAST_LABEL[item.roast]} {"·"} {item.acceptance} accepted
-                                    </span>
-                                    <span className="solve" style={{ fontWeight: 600 }}>
-                                        Solve it
-                                    </span>
+                        <div className="inner" style={{ width: 556, height: 360, boxSizing: "border-box", padding: 32, display: "flex", flexDirection: "column", gap: 12 }}>
+                            <span style={{ fontSize: 30, fontWeight: 600, lineHeight: 1.1, letterSpacing: "-.01em" }}>{item.name}</span>
+                            <span style={{ fontSize: 16, lineHeight: 1.5, maxWidth: "46ch" }}>{item.excerpt}</span>
+                            <span style={{ flex: 1 }} />
+                            <span style={{ display: "flex", justifyContent: "space-between", gap: 16, fontSize: 16 }}>
+                                <span>
+                                    {ROAST_LABEL[item.roast]} {"\u00b7"} {item.acceptance} accepted
                                 </span>
-                            </div>
-                        </>
+                                <span className="solve" style={{ fontWeight: 600 }}>
+                                    Solve it
+                                </span>
+                            </span>
+                        </div>
                     );
-                    return i === active ? (
+                    return stacked || i === active ? (
                         <Link key={item.slug} className="card" to={`/problems/${item.slug}`} style={style} aria-label={`${item.name}: solve it`}>
                             {inner}
                         </Link>
                     ) : (
-                        <button key={item.slug} type="button" className="card" onClick={() => setChosen(i)} aria-expanded={false} style={style}>
+                        <button
+                            key={item.slug}
+                            type="button"
+                            className="card"
+                            onClick={() => setChosen(i)}
+                            onFocus={() => setChosen(i)}
+                            aria-expanded={false}
+                            style={style}
+                        >
                             {inner}
                         </button>
                     );
@@ -501,8 +519,10 @@ function Showcase({ submissions }: { submissions: Submission[] }) {
                 <p style={{ margin: "16px 0 0", fontSize: 22, lineHeight: 1.45 }}>
                     Every run prints a slip. {slips.length ? `These ${slips.length === 6 ? "six" : slips.length} came in this week.` : "The first ones will land here."}
                 </p>
-                <p style={{ margin: "20px 0 0", fontSize: 13, color: "#ffffff" }}>Pictured: the Indian Coffee House, College Street, Kolkata.</p>
             </div>
+            <p style={{ position: "absolute", top: 24, left: 32, margin: 0, fontSize: 13, color: "#ffffff", background: "rgba(12,10,8,.72)", padding: "6px 10px" }}>
+                Indian Coffee House, College Street, Kolkata
+            </p>
 
             <div className="slips" style={{ position: "absolute", left: 12, right: 12, bottom: -48, gap: 12, alignItems: "flex-end" }}>
                 {slips.map((s, i) => (

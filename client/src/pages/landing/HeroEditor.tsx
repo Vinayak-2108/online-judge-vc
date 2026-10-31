@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { demo_run, demo_submit } from "../../controllers/DemoRoutes";
-import { get_submission_summary } from "../../controllers/SubmissionRoutes";
+import { get_all_submissions } from "../../controllers/SubmissionRoutes";
 import { formatRuntime, LANGUAGE_LABEL, TIME_LIMIT_S, verdictKind, verdictShort } from "../../lib/format";
 
 /** Working solutions to Sum of Two Numbers, so Run and Submit really judge something. */
@@ -51,7 +51,9 @@ const mono: CSSProperties = {
 const codeBox: CSSProperties = { ...mono, fontSize: "var(--hero-code, 13px)", lineHeight: 1.7, whiteSpace: "pre", margin: 0, padding: 0 };
 
 interface Slip {
-    id: number;
+    /** null for a practice run: nothing is saved, so it has no submission number. */
+    id: number | null;
+    language: string;
     verdict: string;
     tests: string;
     time: string;
@@ -75,18 +77,30 @@ export default function HeroEditor() {
     const [codes, setCodes] = useState<Record<string, string>>(SOLUTIONS);
     const [input, setInput] = useState("2 3");
     const [out, setOut] = useState<{ text: string; note: string; error: boolean } | null>(null);
-    const [slip, setSlip] = useState<Slip | null>(null);
-    const [nextId, setNextId] = useState<number | null>(null);
+    const [practice, setPractice] = useState<Slip | null>(null);
+    const [real, setReal] = useState<Slip | null>(null);
     const [busy, setBusy] = useState<"run" | "submit" | null>(null);
 
     const code = codes[lang];
     const lines = useMemo(() => code.split("\n"), [code]);
 
-    // The next slip number follows the real tally.
+    // Before anything is run, the slip shows the latest real accepted submission for this problem.
     useEffect(() => {
         let live = true;
-        get_submission_summary()
-            .then((s) => live && s && setNextId(s.everyone + 1))
+        get_all_submissions({ verdict: "accepted", limit: 50 })
+            .then((rows) => {
+                const latest = rows
+                    .filter((r) => r.problem_slug === "sum-of-two-numbers")
+                    .sort((x, y) => Date.parse(y.submission_time) - Date.parse(x.submission_time))[0];
+                if (live && latest)
+                    setReal({
+                        id: latest.id,
+                        language: latest.language,
+                        verdict: "Accepted",
+                        tests: `${latest.passed ?? 0} of ${latest.total ?? 0} tests`,
+                        time: formatRuntime(latest.runtime_ms),
+                    });
+            })
             .catch(() => {});
         return () => {
             live = false;
@@ -124,10 +138,9 @@ export default function HeroEditor() {
         try {
             const { ok, status, data } = await demo_submit({ lang, code });
             if (!ok || !data.verdict) return fail(status, data.error);
-            const id = nextId ?? 1;
-            setNextId(id + 1);
-            setSlip({
-                id,
+            setPractice({
+                id: null,
+                language: lang,
                 verdict: verdictShort(data.verdict),
                 tests: `${data.passed ?? 0} of ${data.total ?? 0} tests`,
                 time: slipTime(data.verdict, data.runtime_ms ?? null),
@@ -139,7 +152,9 @@ export default function HeroEditor() {
         }
     };
 
-    const rows = slip ?? { id: nextId, verdict: "Waiting for a run", tests: "—", time: "—" };
+    const blank: Slip = { id: null, language: lang, verdict: "Waiting for a run", tests: "—", time: "—" };
+    const slip = practice ?? real;
+    const rows = slip ?? blank;
 
     return (
         <div
@@ -150,9 +165,9 @@ export default function HeroEditor() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "flex-start",
                 gap: 24,
-                padding: "48px 32px",
+                padding: "190px 32px 48px",
                 minWidth: 0,
             }}
         >
@@ -264,21 +279,30 @@ export default function HeroEditor() {
                     </button>
                 </div>
 
-                {out && (
-                    <div style={{ padding: "12px 18px 14px", background: "var(--sheet)", borderTop: "1px solid var(--border)" }}>
-                        <div style={{ fontSize: 13, color: "var(--muted)" }}>Output</div>
-                        <div style={{ ...mono, fontSize: 13, marginTop: 4, color: out.error ? "var(--negative)" : "var(--text)", whiteSpace: "pre-wrap" }}>
-                            {out.text}
-                        </div>
-                        <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{out.note}</div>
+                {/* the space is reserved before the first run, so nothing below it moves */}
+                <div
+                    aria-hidden={!out}
+                    style={{
+                        padding: "12px 18px 14px",
+                        background: "var(--sheet)",
+                        borderTop: "1px solid var(--border)",
+                        visibility: out ? "visible" : "hidden",
+                        minHeight: 86,
+                        boxSizing: "border-box",
+                    }}
+                >
+                    <div style={{ fontSize: 13, color: "var(--muted)" }}>Output</div>
+                    <div style={{ ...mono, fontSize: 13, marginTop: 4, color: out?.error ? "var(--negative)" : "var(--text)", whiteSpace: "pre-wrap" }}>
+                        {out?.text ?? "5"}
                     </div>
-                )}
+                    <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{out?.note ?? "Ran in 0.014 s \u00b7 exit code 0"}</div>
+                </div>
             </div>
 
-            <div aria-live="polite" className="slip-box" style={{ width: 300, maxWidth: "100%", minHeight: 150 }}>
+            <div aria-live="polite" className="slip-box" style={{ width: 300, maxWidth: "100%", minHeight: 168 }}>
                 <motion.div
-                    key={slip ? slip.id : "blank"}
-                    initial={reduce || !slip ? false : { y: -48, opacity: 0, rotate: -5, scaleY: 0.86 }}
+                    key={practice ? "practice" : (real?.id ?? "blank")}
+                    initial={reduce || !practice ? false : { y: -48, opacity: 0, rotate: -5, scaleY: 0.86 }}
                     animate={{ y: 0, opacity: 1, rotate: -2, scaleY: 1 }}
                     transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 220, damping: 22 }}
                     style={{
@@ -291,12 +315,12 @@ export default function HeroEditor() {
                         lineHeight: 1.6,
                     }}
                 >
-                    <div style={{ fontWeight: 700 }}>Submission {rows.id != null ? `#${rows.id}` : ""}</div>
+                    <div style={{ fontWeight: 700 }}>{practice ? "Practice run" : rows.id != null ? `Submission #${rows.id}` : "Submission"}</div>
                     <div aria-hidden style={{ color: "#615a52", letterSpacing: ".1em" }}>
                         - - - - - - - - - - - - - - - -
                     </div>
                     <div className="slip-full">Sum of Two Numbers</div>
-                    <div className="slip-full">{LANGUAGE_LABEL[lang]}</div>
+                    <div className="slip-full">{LANGUAGE_LABEL[practice ? lang : rows.language] ?? rows.language}</div>
                     <div className="slip-full" style={{ display: "flex", justifyContent: "space-between" }}>
                         <span>{rows.verdict}</span>
                         <span className="num">{rows.tests}</span>

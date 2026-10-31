@@ -53,6 +53,17 @@ describe("app shell", () => {
         await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/problems/nth-fibonacci"));
     });
 
+    it("shows visible text in the search list when nothing matches", async () => {
+        const user = userEvent.setup();
+        renderAt("/problems");
+        await screen.findByText("Nth Fibonacci");
+        const box = screen.getByRole("combobox", { name: "Search problems" });
+        await user.click(box);
+        await user.type(box, "zzzz");
+        const list = await screen.findByRole("listbox", { name: "Problems" });
+        expect(within(list).getByText("No problem by that name.")).toBeVisible();
+    });
+
     it("shows a not-found state for an unknown page", async () => {
         renderAt("/nowhere");
         expect(await screen.findByText("That page is not on the menu.")).toBeInTheDocument();

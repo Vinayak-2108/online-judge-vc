@@ -206,35 +206,53 @@ interface Ticket {
 function TicketStrip({ t, compact = false }: { t: Ticket; compact?: boolean }) {
     if (compact)
         return (
-            <div className="flex items-center gap-3 rounded-card bg-raised px-4 py-3 text-[14px]" aria-label="Latest submission">
-                <span className="font-code text-[14px]">#{t.id}</span>
+            <div className="flex min-w-0 items-center gap-3 overflow-hidden rounded-card bg-raised pl-4 text-[14px]" aria-label="Latest submission">
+                <span className="shrink-0 font-code text-[14px]">#{t.id}</span>
                 <VerdictPill verdict={t.verdict} />
-                <span className="font-code text-[14px] tabular-nums">{t.passed}/{t.total}</span>
+                <span className="shrink-0 font-code text-[14px] tabular-nums">
+                    {t.passed}/{t.total}
+                </span>
                 <Runtime text={runtimeFor(t.verdict, t.runtime_ms)} />
-                <Link to="/submissions" className="ml-auto shrink-0 whitespace-nowrap text-brand-strong underline">
+                {/* a 44px-high tap target around the small "All" */}
+                <Link to="/submissions" className="ml-auto flex min-h-11 min-w-11 shrink-0 items-center justify-center px-3 whitespace-nowrap text-brand-strong underline">
                     All
                 </Link>
             </div>
         );
+    // The strip follows the width of its own column: lower-priority parts drop out first, the link stays.
     return (
-        <div
-            className="flex items-center gap-x-2.5 rounded-card bg-raised px-3.5 py-3 text-[13.5px] whitespace-nowrap"
-            aria-label="Latest submission"
-            data-testid="ticket"
-        >
-            <span className="font-code text-[13px]">Submission #{t.id}</span>
-            <VerdictPill verdict={t.verdict} />
-            <span className="tabular-nums">
-                {t.passed} of {t.total} tests passed
-            </span>
-            <Runtime text={runtimeFor(t.verdict, t.runtime_ms)} />
-            <span className="min-w-0 truncate text-muted-ink">
-                {LANGUAGE_LABEL[t.lang] ?? t.lang} {"·"} {relativeTime(new Date(t.at).toISOString())}
-            </span>
-            <Link to="/submissions" className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-brand-strong">
-                All submissions
-                <ChevronRightIcon className="size-4" aria-hidden />
-            </Link>
+        <div className="@container min-w-0">
+            <div
+                className="flex min-w-0 items-center gap-x-2.5 overflow-hidden rounded-card bg-raised px-3.5 py-3 text-[13.5px] whitespace-nowrap"
+                aria-label="Latest submission"
+                data-testid="ticket"
+            >
+                <span className="shrink-0 font-code text-[13px]">
+                    <span className="@max-[470px]:hidden">Submission </span>#{t.id}
+                </span>
+                <span className="shrink-0">
+                    <VerdictPill verdict={t.verdict} />
+                </span>
+                <span className="shrink-0 tabular-nums">
+                    {t.passed} of {t.total}
+                    <span className="@max-[430px]:hidden"> tests passed</span>
+                </span>
+                <span className="shrink-0">
+                    <Runtime text={runtimeFor(t.verdict, t.runtime_ms)} />
+                </span>
+                <span className="min-w-0 truncate text-muted-ink @max-[560px]:hidden">
+                    {LANGUAGE_LABEL[t.lang] ?? t.lang} {"\u00b7"} {relativeTime(t.at)}
+                </span>
+                <Link
+                    to="/submissions"
+                    className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-brand-strong"
+                >
+                    <span>
+                        All <span className="@max-[430px]:hidden">submissions</span>
+                    </span>
+                    <ChevronRightIcon className="size-4" aria-hidden />
+                </Link>
+            </div>
         </div>
     );
 }
